@@ -129,7 +129,7 @@
   }
 
   function makeGhost(name, color, x, y, dir, delay) {
-    return { name, color, x, y, homeX: x, homeY: y, dir, speed: 3.75, delay, state: "scatter", eaten: false, phase: delay };
+    return { name, color, x, y, homeX: x, homeY: y, dir, speed: 3.75, delay, state: "scatter", eaten: false, phase: delay, destination: null };
   }
 
   function isOpen(x, y) {
@@ -272,7 +272,7 @@
       if (ghost.phase > 0) { ghost.phase -= dt; return; }
       ghost.state = ghost.eaten ? "eyes" : frightened ? "frightened" : game.mode;
       const speed = ghost.state === "frightened" ? 2.1 : ghost.state === "eyes" ? 6 : ghost.speed;
-      if (tileCenter(ghost)) {
+      if (!ghost.destination) {
         ghost.x = Math.floor(ghost.x) + .5;
         ghost.y = Math.floor(ghost.y) + .5;
         const options = ["left", "right", "up", "down"].filter((dir) => canMove(ghost, dir) && dir !== OPPOSITE[ghost.dir]);
@@ -281,6 +281,8 @@
           const target = ghostTarget(ghost, index);
           ghost.dir = ghost.state === "frightened" ? options[randomInt(0, options.length - 1)] : options.sort((a, b) => distanceToTile(target, nextTile(ghost, a)) - distanceToTile(target, nextTile(ghost, b)))[0];
         }
+        const direction = DIRECTIONS[ghost.dir];
+        ghost.destination = { x: ghost.x + direction.x, y: ghost.y + direction.y };
       }
       advanceGhost(ghost, speed, dt);
       if (ghost.state === "eyes" && distance(ghost, ghostHome) < .25) { ghost.eaten = false; ghost.state = game.mode; }
@@ -290,8 +292,7 @@
 
   function advanceGhost(ghost, speed, dt) {
     const d = DIRECTIONS[ghost.dir];
-    const current = { x: Math.floor(ghost.x) + .5, y: Math.floor(ghost.y) + .5 };
-    const destination = { x: current.x + d.x, y: current.y + d.y };
+    const destination = ghost.destination;
     const distanceToCenter = Math.abs(d.x ? destination.x - ghost.x : destination.y - ghost.y);
     const step = speed * dt;
     if (step >= distanceToCenter) {
@@ -299,6 +300,7 @@
       ghost.y = destination.y;
       if (ghost.x < 0) ghost.x = COLS - .5;
       if (ghost.x >= COLS) ghost.x = .5;
+      ghost.destination = null;
     } else {
       ghost.x += d.x * step;
       ghost.y += d.y * step;
