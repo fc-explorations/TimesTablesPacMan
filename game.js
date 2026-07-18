@@ -26,6 +26,7 @@
   const maxFactorInput = document.querySelector("#max-factor");
   const distractorCountInput = document.querySelector("#distractor-count");
   const levelPointDeltaInput = document.querySelector("#level-point-delta");
+  const gameSpeedInput = document.querySelector("#game-speed");
   const feedbackInput = document.querySelector("#feedback-duration");
   const reducedMotionInput = document.querySelector("#reduced-motion");
 
@@ -89,7 +90,7 @@
   ];
 
   function defaultSettings() {
-    return { minFactor: 2, maxFactor: 12, distractorCount: 8, levelPointDelta: 500, feedbackDuration: 2, reducedMotion: false };
+    return { minFactor: 2, maxFactor: 12, distractorCount: 8, levelPointDelta: 500, gameSpeed: 1, feedbackDuration: 2, reducedMotion: false };
   }
 
   function loadSettings() {
@@ -281,11 +282,11 @@
   }
 
   function makePlayer() {
-    return { x: spawn.x, y: spawn.y, dir: "left", nextDir: "left", speed: 5.2, mouth: 0 };
+    return { x: spawn.x, y: spawn.y, dir: "left", nextDir: "left", speed: 5.2 * speedMultiplier(), mouth: 0 };
   }
 
   function makeGhost(name, color, x, y, dir, delay) {
-    return { name, color, x, y, homeX: x, homeY: y, dir, speed: 3.75, delay, state: "scatter", eaten: false, phase: delay, destination: null, releasing: true };
+    return { name, color, x, y, homeX: x, homeY: y, dir, speed: 3.75 * speedMultiplier(), delay, state: "scatter", eaten: false, phase: delay, destination: null, releasing: true };
   }
 
   function isOpen(x, y) {
@@ -499,6 +500,7 @@
   }
 
   function levelPointDelta() { return clamp(Math.round(Number(settings.levelPointDelta) || 500), 100, 5000); }
+  function speedMultiplier() { return clamp(Number(settings.gameSpeed) || 1, .5, 2); }
 
   function addScore(points) {
     game.score += points;
@@ -562,7 +564,7 @@
     ghosts.forEach((ghost, index) => {
       if (ghost.phase > 0) { ghost.phase -= dt; return; }
       ghost.state = ghost.eaten ? "eyes" : ghost.releasing ? "exit" : frightened ? "frightened" : game.mode;
-      const speed = ghost.state === "frightened" ? 2.1 : ghost.state === "eyes" ? 6 : ghost.speed;
+      const speed = ghost.state === "frightened" ? 2.1 * speedMultiplier() : ghost.state === "eyes" ? 6 * speedMultiplier() : ghost.speed;
       if (!ghost.destination) {
         ghost.x = Math.floor(ghost.x) + .5;
         ghost.y = Math.floor(ghost.y) + .5;
@@ -855,7 +857,7 @@
   }
 
   function populateSettings() {
-    minFactorInput.value = settings.minFactor; maxFactorInput.value = settings.maxFactor; distractorCountInput.value = settings.distractorCount; levelPointDeltaInput.value = settings.levelPointDelta; feedbackInput.value = settings.feedbackDuration; reducedMotionInput.checked = settings.reducedMotion;
+    minFactorInput.value = settings.minFactor; maxFactorInput.value = settings.maxFactor; distractorCountInput.value = settings.distractorCount; levelPointDeltaInput.value = settings.levelPointDelta; gameSpeedInput.value = settings.gameSpeed; feedbackInput.value = settings.feedbackDuration; reducedMotionInput.checked = settings.reducedMotion;
   }
 
   function openSettings(open) {
@@ -899,7 +901,7 @@
     event.preventDefault();
     const min = clamp(Math.round(Number(minFactorInput.value) || 2), 1, 20);
     const max = clamp(Math.round(Number(maxFactorInput.value) || 12), min, 20);
-    settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 8), 1, 8); settings.levelPointDelta = clamp(Math.round((Number(levelPointDeltaInput.value) || 500) / 50) * 50, 100, 5000); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
+    settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 8), 1, 8); settings.levelPointDelta = clamp(Math.round((Number(levelPointDeltaInput.value) || 500) / 50) * 50, 100, 5000); settings.gameSpeed = clamp(Math.round((Number(gameSpeedInput.value) || 1) * 10) / 10, .5, 2); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
     saveSettings(); openSettings(false); nextQuestion(); statusText.textContent = "Settings saved.";
   }
 

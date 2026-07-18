@@ -36,6 +36,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - The maze and entities are rendered on one canvas. Question, feedback, settings, and status text remain semantic HTML.
 - Settings persisted in `localStorage`: factor minimum, factor maximum, feedback duration, and reduced-motion preference.
 - Settings also persist the points required to advance each level.
+- Game speed is persisted as a shared multiplier for Pac-Man and every ghost state.
 - Players can configure the number of incorrect/confounding numbers shown alongside the correct answer.
 
 ## Maze and Ghosts
@@ -58,5 +59,6 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Factor range: 2–12.
 - Feedback duration: 2 seconds.
 - Points per level: 500.
+- Game speed: 1×.
 - Number targets per question: one correct plus a configurable number of distractors, defaulting to eight.
 - Score and combo are session-only; settings persist locally.
