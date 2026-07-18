@@ -196,6 +196,8 @@
     grid[ROWS - 2].fill("#");
     grid[ROWS - 1].fill("#");
     grid[0][13] = "."; grid[0][14] = ".";
+    grid[1][13] = "."; grid[1][14] = ".";
+    grid[ROWS - 2][13] = "."; grid[ROWS - 2][14] = ".";
     grid[ROWS - 1][13] = "."; grid[ROWS - 1][14] = ".";
     return isMazeSolvable(grid) ? grid : createMaze();
   }
