@@ -8,7 +8,6 @@
   const questionCountdown = document.querySelector("#question-countdown");
   const countdownRing = document.querySelector("#countdown-ring");
   const countdownValue = document.querySelector("#countdown-value");
-  const statusPill = document.querySelector("#status-pill");
   const scoreEl = document.querySelector("#score");
   const comboEl = document.querySelector("#combo");
   const bestScoreEl = document.querySelector("#best-score");
@@ -663,8 +662,6 @@
     scoreEl.textContent = String(game.score);
     comboEl.textContent = String(game.combo);
     bestScoreEl.textContent = String(game.best);
-    statusPill.textContent = game.paused ? "Paused" : "Playing";
-    statusPill.className = `status-pill${game.paused ? " paused" : ""}`;
     pauseButton.textContent = game.paused ? "Resume" : "Pause";
     pauseOverlay.hidden = !game.paused;
     if (game.feedback) {
