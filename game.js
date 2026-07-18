@@ -632,10 +632,12 @@
       if (!pellet.active) return;
       const x = (pellet.x + .5) * TILE, y = (pellet.y + .5) * TILE;
       const rotation = settings.reducedMotion ? 0 : game.elapsed * 2.6 + index * 1.4;
+      const glowPulse = settings.reducedMotion ? .8 : .5 + (.5 * (Math.sin(game.elapsed * Math.PI * 1.2 + index) + 1) / 2);
       ctx.save();
       ctx.translate(x, y);
+      ctx.globalAlpha = .7 + (.3 * glowPulse);
       ctx.fillStyle = "#319dff";
-      ctx.shadowBlur = 18;
+      ctx.shadowBlur = 8 + (14 * glowPulse);
       ctx.shadowColor = "#319dff";
       ctx.beginPath(); ctx.arc(0, 0, 6.5, 0, Math.PI * 2); ctx.fill();
       const depth = Math.cos(rotation);
