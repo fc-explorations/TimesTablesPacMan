@@ -431,6 +431,7 @@
   }
 
   function regenerateMaze() {
+    const previousPlayer = { ...player };
     const previousSignature = mazeSignature(maze);
     let nextMaze;
     do {
@@ -445,9 +446,36 @@
     game.ghostFreezeUntil = 0;
     game.decoy = null;
     setupLevelPowerUps();
-    Object.assign(player, makePlayer());
+    restorePlayerAfterMaze(previousPlayer);
     ghosts.forEach((ghost) => Object.assign(ghost, makeGhost(ghost.name, ghost.color, ghost.homeX, ghost.homeY, "left", ghost.delay)));
     game.powerPellets.forEach((pellet) => { pellet.active = true; });
+  }
+
+  function restorePlayerAfterMaze(previousPlayer) {
+    const x = ((previousPlayer.x % COLS) + COLS) % COLS;
+    const y = ((previousPlayer.y % ROWS) + ROWS) % ROWS;
+    const tileIsSafe = (tileX, tileY) => {
+      const wrappedX = (tileX + COLS) % COLS;
+      const wrappedY = (tileY + ROWS) % ROWS;
+      const inGhostHouse = wrappedX >= ghostHouse.left && wrappedX <= ghostHouse.right && wrappedY >= ghostHouse.top && wrappedY <= ghostHouse.bottom;
+      return maze[wrappedY][wrappedX] !== "#" && !inGhostHouse;
+    };
+    let position = tileIsSafe(Math.floor(x), Math.floor(y)) ? { x, y } : null;
+    if (!position) {
+      const candidates = [];
+      for (let tileY = 0; tileY < ROWS; tileY++) for (let tileX = 0; tileX < COLS; tileX++) {
+        if (tileIsSafe(tileX, tileY)) candidates.push({ x: tileX + .5, y: tileY + .5 });
+      }
+      candidates.sort((a, b) => {
+        const distanceA = Math.hypot(wrappedDifference(x, a.x, COLS), wrappedDifference(y, a.y, ROWS));
+        const distanceB = Math.hypot(wrappedDifference(x, b.x, COLS), wrappedDifference(y, b.y, ROWS));
+        return distanceA - distanceB;
+      });
+      position = candidates[0] || { ...spawn };
+    }
+    const direction = DIRECTIONS[previousPlayer.dir] ? previousPlayer.dir : "left";
+    const nextDirection = DIRECTIONS[previousPlayer.nextDir] ? previousPlayer.nextDir : direction;
+    Object.assign(player, makePlayer(), { ...position, dir: direction, nextDir: nextDirection });
   }
 
   function mazeSignature(grid) { return grid.map((row) => row.join("")).join("|"); }

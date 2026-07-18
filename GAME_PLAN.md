@@ -11,6 +11,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Questions use configurable factors and alternate between `A × B = ?` and `A × ? = C`.
 - Each question places one correct answer and nearby distractors on walkable maze tiles.
 - Every new question regenerates a validated random maze layout.
+- When a question changes, Pac-Man keeps moving from his current position and direction; if the new maze blocks that tile, he is placed on the nearest safe lane.
 - Answer targets are bucketed across the maze so they are spread through different regions.
 - Targets are kept off the same row and column, with minimum spacing, so they do not form an unavoidable line across a corridor.
 - Number targets are floating orange labels without surrounding circles; feedback changes their glow color.
