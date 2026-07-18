@@ -956,7 +956,7 @@
     const dx = wrappedDifference(player.x, target.x + .5, COLS);
     const dy = wrappedDifference(player.y, target.y + .5, ROWS);
     ctx.save();
-    ctx.translate(player.x * TILE, player.y * TILE - 14);
+    ctx.translate(player.x * TILE, player.y * TILE);
     ctx.rotate(Math.atan2(dy, dx));
     ctx.strokeStyle = "#5dff9b";
     ctx.fillStyle = "#5dff9b";
