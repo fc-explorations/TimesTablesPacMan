@@ -25,6 +25,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - `game.js` owns the game loop, maze, entities, questions, targets, scoring, ghost state machine, input, and local persistence.
 - The maze and entities are rendered on one canvas. Question, feedback, settings, and status text remain semantic HTML.
 - Settings persisted in `localStorage`: factor minimum, factor maximum, feedback duration, and reduced-motion preference.
+- Players can configure the number of incorrect/confounding numbers shown alongside the correct answer.
 
 ## Maze and Ghosts
 
@@ -42,5 +43,5 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 
 - Factor range: 2–12.
 - Feedback duration: 3 seconds.
-- Five number targets per question: one correct plus four distractors.
+- Number targets per question: one correct plus a configurable number of distractors, defaulting to four.
 - Score and combo are session-only; settings persist locally.

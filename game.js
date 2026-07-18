@@ -22,6 +22,7 @@
   const settingsForm = document.querySelector("#settings-form");
   const minFactorInput = document.querySelector("#min-factor");
   const maxFactorInput = document.querySelector("#max-factor");
+  const distractorCountInput = document.querySelector("#distractor-count");
   const feedbackInput = document.querySelector("#feedback-duration");
   const reducedMotionInput = document.querySelector("#reduced-motion");
 
@@ -73,7 +74,7 @@
   ];
 
   function defaultSettings() {
-    return { minFactor: 2, maxFactor: 12, feedbackDuration: 3, reducedMotion: false };
+    return { minFactor: 2, maxFactor: 12, distractorCount: 4, feedbackDuration: 3, reducedMotion: false };
   }
 
   function loadSettings() {
@@ -173,7 +174,8 @@
       candidates.push(min * max, min * (max + 1), Math.max(1, (min - 1) * max));
     }
     candidates.sort(() => Math.random() - .5);
-    for (const value of candidates) if (values.size < 5) values.add(value);
+    const targetCount = clamp(Math.round(Number(settings.distractorCount) || 4) + 1, 2, 9);
+    for (const value of candidates) if (values.size < targetCount) values.add(value);
     const positions = openTiles.filter((tile) => !powerPelletSpots.some((pellet) => pellet.x === tile.x && pellet.y === tile.y)).sort(() => Math.random() - .5).slice(0, values.size);
     return [...values].map((value, index) => ({ ...positions[index], value, correct: value === question.answer, state: "normal" }));
   }
@@ -460,7 +462,7 @@
   }
 
   function populateSettings() {
-    minFactorInput.value = settings.minFactor; maxFactorInput.value = settings.maxFactor; feedbackInput.value = settings.feedbackDuration; reducedMotionInput.checked = settings.reducedMotion;
+    minFactorInput.value = settings.minFactor; maxFactorInput.value = settings.maxFactor; distractorCountInput.value = settings.distractorCount; feedbackInput.value = settings.feedbackDuration; reducedMotionInput.checked = settings.reducedMotion;
   }
 
   function openSettings(open) {
@@ -487,7 +489,7 @@
     event.preventDefault();
     const min = clamp(Math.round(Number(minFactorInput.value) || 2), 1, 20);
     const max = clamp(Math.round(Number(maxFactorInput.value) || 12), min, 20);
-    settings.minFactor = min; settings.maxFactor = max; settings.feedbackDuration = clamp(Number(feedbackInput.value) || 3, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
+    settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 4), 1, 8); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 3, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
     saveSettings(); openSettings(false); nextQuestion(); statusText.textContent = "Settings saved.";
   }
 
