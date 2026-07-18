@@ -77,6 +77,7 @@
     timeWarpUntil: 0,
     secondChanceActive: false,
     collisionGraceUntil: 0,
+    dissolvingWalls: [],
     frightenedUntil: 0,
     hitStarted: 0,
     respawnAt: 0,
@@ -329,6 +330,7 @@
     if (maze[y][x] === "#") {
       maze[y][x] = ".";
       openTiles = getOpenTiles();
+      game.dissolvingWalls.push({ x, y, started: game.elapsed, until: game.elapsed + .6, seed: x * 97 + y * 193 });
     }
   }
 
@@ -457,6 +459,7 @@
     game.timeWarpUntil = 0;
     game.secondChanceActive = false;
     game.collisionGraceUntil = 0;
+    game.dissolvingWalls = [];
     setupLevelPowerUps();
     restorePlayerAfterMaze(previousPlayer);
     ghosts.forEach((ghost) => Object.assign(ghost, makeGhost(ghost.name, ghost.color, ghost.homeX, ghost.homeY, "left", ghost.delay)));
@@ -806,6 +809,7 @@
     if (game.feedback && game.elapsed >= game.feedback.until) game.feedback = null;
     if (game.targetReveal && game.elapsed >= game.targetReveal.until) game.targetReveal = null;
     if (game.mazeTransition?.phase === "in" && game.elapsed >= game.mazeTransition.until) game.mazeTransition = null;
+    game.dissolvingWalls = game.dissolvingWalls.filter((wall) => game.elapsed < wall.until);
     updateUI();
   }
 
@@ -817,6 +821,7 @@
     ctx.fillStyle = "#05050d";
     ctx.fillRect(0, 0, COLS * TILE, ROWS * TILE);
     drawMaze();
+    drawDissolvingWalls();
     drawPowerPellets();
     drawTeleporters();
     drawSuperPowerUp();
@@ -859,6 +864,33 @@
     const progress = settings.reducedMotion ? 1 : clamp((game.elapsed - transition.started) / (transition.until - transition.started), 0, 1);
     if (transition.phase === "out") return fromWall ? 1 - progress : 0;
     return toWall ? progress : 0;
+  }
+
+  function drawDissolvingWalls() {
+    if (settings.reducedMotion) return;
+    game.dissolvingWalls.forEach((wall) => {
+      const progress = clamp((game.elapsed - wall.started) / (wall.until - wall.started), 0, 1);
+      const opacity = 1 - progress;
+      const centerX = (wall.x + .5) * TILE;
+      const centerY = (wall.y + .5) * TILE;
+      ctx.save();
+      ctx.fillStyle = "#161448";
+      ctx.globalAlpha = opacity * .8;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = "#4b52db";
+      ctx.fillRect(wall.x * TILE + 1, wall.y * TILE + 1, TILE - 2, TILE - 2);
+      for (let particle = 0; particle < 12; particle++) {
+        const angle = wall.seed * .03 + particle * Math.PI / 6;
+        const distance = progress * TILE * (0.25 + (particle % 4) * .12);
+        const x = centerX + Math.cos(angle) * distance;
+        const y = centerY + Math.sin(angle) * distance;
+        const size = 2.8 - progress * 1.4;
+        ctx.globalAlpha = opacity;
+        ctx.fillStyle = particle % 3 === 0 ? "#5d6cff" : "#30308d";
+        ctx.fillRect(x - size / 2, y - size / 2, size, size);
+      }
+      ctx.restore();
+    });
   }
 
   function drawTargets() {
