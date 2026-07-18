@@ -97,7 +97,7 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
   }
 
-  function createMaze() {
+  function createMaze(randomSource = Math.random, attempt = 0) {
     // A compact 14×15 blueprint is expanded into 2×2 open blocks. This keeps
     // every regular corridor two cells wide while preserving a classic maze silhouette.
     const baseBlueprint = [
@@ -124,12 +124,12 @@
       const verticalBridge = baseBlueprint[y - 1][x] === "." && baseBlueprint[y + 1][x] === ".";
       if (horizontalBridge || verticalBridge) bridgeCandidates.push([x, y]);
     }
-    bridgeCandidates.sort(() => Math.random() - .5);
-    bridgeCandidates.slice(0, randomInt(1, Math.min(3, bridgeCandidates.length))).forEach(([x, y]) => {
+    bridgeCandidates.sort(() => randomSource() - .5);
+    bridgeCandidates.slice(0, randomInt(1, Math.min(3, bridgeCandidates.length), randomSource)).forEach(([x, y]) => {
       baseBlueprint[y] = `${baseBlueprint[y].slice(0, x)}.${baseBlueprint[y].slice(x + 1)}`;
     });
-    const flipX = Math.random() < .5;
-    const flipY = Math.random() < .5;
+    const flipX = randomSource() < .5;
+    const flipY = randomSource() < .5;
     const blueprint = baseBlueprint.map((_, y) => {
       const sourceRow = baseBlueprint[flipY ? baseBlueprint.length - 1 - y : y];
       return flipX ? sourceRow.split("").reverse().join("") : sourceRow;
@@ -203,7 +203,11 @@
     grid[1][13] = "."; grid[1][14] = ".";
     grid[ROWS - 2][13] = "."; grid[ROWS - 2][14] = ".";
     grid[ROWS - 1][13] = "."; grid[ROWS - 1][14] = ".";
-    return isMazeSolvable(grid) && isGhostHouseClear(grid) ? grid : createMaze();
+    if (isMazeSolvable(grid) && isGhostHouseClear(grid)) return grid;
+    // Never let a rare run of invalid random layouts freeze the whole game.
+    // The fixed fallback seed produces a known valid layout from this blueprint.
+    if (attempt >= 80) return createMaze(() => .42, 0);
+    return createMaze(randomSource, attempt + 1);
   }
 
   function isGhostHouseClear(grid) {
@@ -359,7 +363,7 @@
     game.powerPellets.forEach((pellet) => { pellet.active = true; });
   }
 
-  function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function randomInt(min, max, randomSource = Math.random) { return Math.floor(randomSource() * (max - min + 1)) + min; }
   function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
   function distance(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
