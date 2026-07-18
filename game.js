@@ -963,8 +963,11 @@
     ctx.shadowBlur = 12;
     ctx.shadowColor = "#5dff9b";
     ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(-7, 0); ctx.lineTo(9, 0); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(3, -4); ctx.lineTo(3, 4); ctx.closePath(); ctx.fill();
+    const arrowLength = TILE * .86;
+    const arrowStart = -arrowLength / 2;
+    const arrowTip = arrowLength / 2;
+    ctx.beginPath(); ctx.moveTo(arrowStart, 0); ctx.lineTo(arrowTip, 0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(arrowTip, 0); ctx.lineTo(arrowTip - 6, -4); ctx.lineTo(arrowTip - 6, 4); ctx.closePath(); ctx.fill();
     ctx.restore();
   }
 
