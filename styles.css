@@ -72,11 +72,8 @@ h2 { font-size: 1.05rem; }
 .stat-icon { width: 35px; height: 35px; flex: 0 0 35px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
 .icon-gold { color: var(--yellow); filter: drop-shadow(0 0 7px rgba(255, 216, 77, .55)); }
 .icon-cyan { color: var(--cyan); filter: drop-shadow(0 0 7px rgba(39, 217, 255, .55)); }
-.objective-card { margin-top: 16px; padding: 24px 22px; border: 1px solid #237c67; border-radius: 16px; background: linear-gradient(145deg, rgba(7, 37, 47, .9), rgba(7, 15, 43, .92)); box-shadow: 0 0 20px rgba(42, 203, 142, .1); text-align: center; }
-.objective-card .eyebrow { color: #63f486; }
-.objective-card p:last-child { margin-top: 18px; color: var(--ink); font-size: 1rem; line-height: 1.45; }
 .board-wrap { min-width: 0; }
-.canvas-frame { position: relative; overflow: hidden; border: 3px solid #4c2bb5; border-radius: 18px; background: #05050d; box-shadow: 0 0 0 1px rgba(126, 91, 255, .45), 0 0 25px rgba(89, 46, 241, .35), 0 18px 55px rgba(0, 0, 0, .5); }
+.canvas-frame { position: relative; overflow: hidden; border: 0; border-radius: 0; background: #05050d; box-shadow: none; }
 canvas { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .pause-overlay { position: absolute; inset: 0; display: grid; place-content: center; gap: 8px; text-align: center; background: rgba(5,5,13,.82); font-size: 1.5rem; }
 .pause-overlay span { color: var(--muted); font-size: .85rem; }
@@ -115,7 +112,6 @@ input[type="number"] { width: 100%; padding: 10px; border: 1px solid var(--line)
   .question { font-size: clamp(1.75rem, 6vw, 2.6rem); }
   .score-panel { grid-template-columns: repeat(2, 1fr); }
   .side-panel { display: grid; grid-template-columns: 1fr; gap: 8px; }
-  .objective-card { margin-top: 8px; }
 }
 @media (min-width: 921px) and (max-width: 1180px) {
   .game-layout { grid-template-columns: 240px minmax(0, 1fr) 170px; }
