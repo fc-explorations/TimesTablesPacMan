@@ -607,13 +607,18 @@
       const blinking = game.feedback && state === "normal" && !settings.reducedMotion;
       const fadeProgress = blinking ? (game.elapsed - game.feedback.started) % 2 : 0;
       const feedbackAlpha = blinking ? (1 + Math.cos(Math.PI * fadeProgress)) / 2 : 1;
+      const feedbackBrightness = Math.round(255 * feedbackAlpha);
       ctx.save();
       ctx.translate(x, y + floatOffset);
       ctx.rotate(tilt);
-      if (blinking) ctx.globalAlpha = feedbackAlpha;
       if (state === "correct") { ctx.shadowBlur = 20; ctx.shadowColor = "#48e49a"; ctx.fillStyle = "#48e49a"; }
       else if (state === "wrong") { ctx.shadowBlur = 20; ctx.shadowColor = "#ff6577"; ctx.fillStyle = "#ff6577"; }
-      else if (game.feedback) { ctx.shadowBlur = 12 * feedbackAlpha; ctx.shadowColor = "#fff"; ctx.fillStyle = "#fff"; }
+      else if (game.feedback) {
+        const feedbackColor = `rgb(${feedbackBrightness} ${feedbackBrightness} ${feedbackBrightness})`;
+        ctx.shadowBlur = 12 * feedbackAlpha;
+        ctx.shadowColor = feedbackColor;
+        ctx.fillStyle = feedbackColor;
+      }
     else { ctx.shadowBlur = 12; ctx.shadowColor = "#ffad4d"; ctx.fillStyle = "#ffad4d"; }
       ctx.font = `900 ${target.value >= 100 ? 11 : 15}px system-ui`;
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
