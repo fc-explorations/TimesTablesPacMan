@@ -73,6 +73,7 @@
   const GHOST_RELEASE_INTERVAL = 1.6;
 
   const player = makePlayer();
+  let modalPauseBeforeOpen = null;
   const ghosts = [
     makeGhost("Blinky", "#f34c5e", 13.5, 14.5, "left", 0),
     makeGhost("Pinky", "#ff9ed1", 13.5, 15.5, "up", 1.8),
@@ -698,21 +699,38 @@
   function openSettings(open) {
     settingsButton.setAttribute("aria-expanded", String(open));
     if (open) {
+      pauseForModal();
       populateSettings();
       if (typeof settingsDialog.showModal === "function") settingsDialog.showModal();
       else settingsDialog.hidden = false;
       minFactorInput.focus();
     } else if (settingsDialog.open && typeof settingsDialog.close === "function") settingsDialog.close();
-    else settingsDialog.hidden = true;
+    else { settingsDialog.hidden = true; restoreModalPause(); }
   }
 
   function openInstructions(open) {
     if (open) {
+      pauseForModal();
       if (typeof instructionsDialog.showModal === "function") instructionsDialog.showModal();
       else instructionsDialog.hidden = false;
       closeInstructions.focus();
     } else if (instructionsDialog.open && typeof instructionsDialog.close === "function") instructionsDialog.close();
-    else instructionsDialog.hidden = true;
+    else { instructionsDialog.hidden = true; restoreModalPause(); }
+  }
+
+  function pauseForModal() {
+    if (modalPauseBeforeOpen === null) modalPauseBeforeOpen = game.paused;
+    game.paused = true;
+    updateUI();
+    statusText.textContent = "Game paused while this window is open.";
+  }
+
+  function restoreModalPause() {
+    if (modalPauseBeforeOpen === null) return;
+    game.paused = modalPauseBeforeOpen;
+    modalPauseBeforeOpen = null;
+    updateUI();
+    statusText.textContent = game.paused ? "Game paused." : "Choose a direction to continue.";
   }
 
   function saveForm(event) {
@@ -751,7 +769,8 @@
   settingsButton.addEventListener("click", () => openSettings(!settingsDialog.open));
   closeSettings.addEventListener("click", () => openSettings(false));
   closeInstructions.addEventListener("click", () => openInstructions(false));
-  settingsDialog.addEventListener("close", () => settingsButton.setAttribute("aria-expanded", "false"));
+  settingsDialog.addEventListener("close", () => { settingsButton.setAttribute("aria-expanded", "false"); restoreModalPause(); });
+  instructionsDialog.addEventListener("close", restoreModalPause);
   settingsForm.addEventListener("submit", saveForm);
 
   bestScoreEl.textContent = String(game.best);
