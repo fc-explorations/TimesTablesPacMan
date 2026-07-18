@@ -4,7 +4,6 @@
   const canvas = document.querySelector("#game-canvas");
   const ctx = canvas.getContext("2d");
   const questionText = document.querySelector("#question-text");
-  const feedbackText = document.querySelector("#feedback-text");
   const statusText = document.querySelector("#status-text");
   const statusPill = document.querySelector("#status-pill");
   const scoreEl = document.querySelector("#score");
@@ -53,7 +52,6 @@
     paused: false,
     started: false,
     feedback: null,
-    revealAnswer: null,
     question: null,
     targets: [],
     powerPellets: powerPelletSpots.map((spot) => ({ ...spot, kind: "pellet", active: true })),
@@ -200,16 +198,20 @@
     game.question = getQuestion();
     game.targets = makeTargets(game.question);
     questionText.textContent = game.question.text;
-    feedbackText.textContent = "";
-    feedbackText.className = "feedback";
+    questionText.className = "question";
     game.feedback = null;
-    game.revealAnswer = null;
     updateUI();
   }
 
   function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
   function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
   function distance(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+
+  function completedEquation(question, answer) {
+    return question.type === "product"
+      ? `${question.a} × ${question.b} = ${answer}`
+      : `${question.a} × ${answer} = ${question.a * answer}`;
+  }
 
   function setDirection(direction) {
     if (!DIRECTIONS[direction]) return;
@@ -249,13 +251,23 @@
       target.state = "correct";
       game.score += 100 + game.combo * 25;
       game.combo += 1;
-      setFeedback(`Correct! ${target.value} is the answer.`, "good");
+      questionText.textContent = completedEquation(game.question, target.value);
+      questionText.className = "question answer-good";
+      game.feedback = { type: "good", until: game.elapsed + settings.feedbackDuration, question: game.question };
+      statusText.textContent = "Correct!";
     } else {
       target.state = "wrong";
       game.score = Math.max(0, game.score - 25);
       game.combo = 0;
-      game.revealAnswer = { value: game.question.answer, until: game.elapsed + settings.feedbackDuration };
-      setFeedback(`Not quite: ${target.value} is wrong. The answer is ${game.question.answer}.`, "bad");
+      questionText.textContent = completedEquation(game.question, target.value);
+      questionText.className = "question answer-bad";
+      game.feedback = { type: "bad", until: game.elapsed + settings.feedbackDuration, question: game.question };
+      statusText.textContent = "Try the next one.";
+      window.setTimeout(() => {
+        if (game.feedback?.question !== game.question || game.feedback.type !== "bad") return;
+        questionText.textContent = completedEquation(game.question, game.question.answer);
+        questionText.className = "question answer-reveal";
+      }, Math.min(1000, settings.feedbackDuration * 500));
     }
     game.best = Math.max(game.best, game.score);
     localStorage.setItem("times-table-pacman-best", String(game.best));
@@ -270,13 +282,6 @@
     statusText.textContent = "Power pellet! Ghosts are frightened for 7 seconds.";
     updateUI();
     window.setTimeout(() => { pellet.active = true; }, 7000);
-  }
-
-  function setFeedback(text, type) {
-    game.feedback = { text, type, until: game.elapsed + settings.feedbackDuration };
-    feedbackText.textContent = text;
-    feedbackText.className = `feedback ${type}`;
-    statusText.textContent = type === "good" ? "Great work — next question soon." : "Keep going — try the next one.";
   }
 
   function updateGhosts(dt) {
@@ -387,7 +392,6 @@
     drawMaze();
     drawPowerPellets();
     drawTargets();
-    drawRevealAnswer();
     drawPlayer();
     ghosts.forEach(drawGhost);
     if (game.frightenedUntil > game.elapsed) drawFrightenedTimer();
@@ -431,20 +435,6 @@
       ctx.save(); ctx.fillStyle = "#fff"; ctx.shadowBlur = 14; ctx.shadowColor = "#fff";
       ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill(); ctx.restore();
     });
-  }
-
-  function drawRevealAnswer() {
-    if (!game.revealAnswer || game.revealAnswer.until <= game.elapsed) return;
-    const x = COLS * TILE / 2;
-    ctx.save();
-    ctx.fillStyle = "#fff";
-    ctx.shadowBlur = 18;
-    ctx.shadowColor = "#fff";
-    ctx.font = "900 12px system-ui";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(`ANSWER: ${game.revealAnswer.value}`, x, TILE * 15.5);
-    ctx.restore();
   }
 
   function drawPlayer() {

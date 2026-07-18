@@ -38,10 +38,9 @@ h2 { font-size: 1.05rem; }
 .wide { width: 100%; }
 .question-panel { align-self: start; min-height: 170px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 16px; background: linear-gradient(135deg, rgba(39, 35, 74, .94), rgba(23, 22, 43, .94)); box-shadow: var(--shadow); }
 .question { margin-top: 10px; font-size: clamp(1.7rem, 3vw, 2.55rem); font-weight: 850; letter-spacing: -.06em; line-height: 1.05; white-space: nowrap; }
-.feedback { min-height: 1.45em; margin-top: 5px; color: var(--muted); font-weight: 700; }
-.feedback { font-size: .8rem; line-height: 1.35; }
-.feedback.good { color: var(--green); }
-.feedback.bad { color: var(--red); }
+.question.answer-good { color: var(--green); text-shadow: 0 0 18px rgba(72, 228, 154, .45); }
+.question.answer-bad { color: var(--red); text-shadow: 0 0 18px rgba(255, 101, 119, .45); }
+.question.answer-reveal { color: #fff; text-shadow: 0 0 18px rgba(255, 255, 255, .45); }
 .game-layout { display: grid; grid-template-columns: 280px minmax(420px, 672px) 190px; align-items: start; justify-content: center; gap: 18px; }
 .score-panel, .settings-panel { border: 1px solid var(--line); border-radius: 16px; background: rgba(23, 22, 43, .9); }
 .score-panel { display: grid; gap: 1px; overflow: hidden; }
