@@ -36,6 +36,20 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - After capture, ghosts return to the central rectangle and release one by one on staggered timers.
 - The session is endless until the player pauses or restarts.
 
+## Power-up Icon Legend
+
+| Icon | Power-up | Effect |
+| --- | --- | --- |
+| Rotating blue orb with a moving surface dot | Frightened orb | Makes ghosts frightened and eatable temporarily. |
+| Purple/blue crossed ellipse | Teleporter | Sends Pac-Man to another portal; portals remain reusable. |
+| Rotating pink star | Super Strength | Lets Pac-Man erase wall blocks temporarily, including boundary walls. |
+| Green diamond with a right-pointing arrow | Radar | Shows a short green glowing arrow toward the correct answer. |
+| Cyan circle with a cross | Shield | Absorbs one ghost collision. |
+| Pale-blue snowflake | Ghost Freeze | Stops ghost movement temporarily. |
+| Light-blue Pac-Man silhouette | Decoy Pac-Man | Sends a short-lived duplicate through the maze to distract ghosts. |
+| Gold clock | Time Warp | Slows ghost movement temporarily. |
+| Pink heart | Second Chance | Preserves the current combo after one wrong answer. |
+
 ## Technical Design
 
 - `index.html` contains the semantic shell, question display, settings panel, score/status area, controls, and canvas.
