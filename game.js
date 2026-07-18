@@ -566,7 +566,7 @@
       game.ghostFreezeUntil = game.elapsed + 5;
       statusText.textContent = "Ghost Freeze active for 5 seconds.";
     } else if (powerUp.type === "decoy") {
-      game.decoy = { x: player.x, y: player.y, dir: player.dir, speed: player.speed * .8, until: game.elapsed + 7, mouth: 0 };
+      game.decoy = { x: player.x, y: player.y, dir: OPPOSITE[player.dir], speed: player.speed * .8, until: game.elapsed + 7, mouth: 0 };
       statusText.textContent = "Decoy Pac-Man is distracting the ghosts.";
     } else if (powerUp.type === "time-warp") {
       game.timeWarpUntil = game.elapsed + 6;
@@ -591,8 +591,12 @@
       };
       const options = ["left", "right", "up", "down"].filter((direction) => isDirectionOpen(direction) && direction !== OPPOSITE[decoy.dir]);
       if (!options.length && isDirectionOpen(OPPOSITE[decoy.dir])) options.push(OPPOSITE[decoy.dir]);
-      if (!isDirectionOpen(decoy.dir) && options.length) decoy.dir = options[randomInt(0, options.length - 1)];
-      else if (options.length && Math.random() < .25) decoy.dir = options[randomInt(0, options.length - 1)];
+      const opposingDirection = OPPOSITE[player.dir];
+      const chooseDirection = () => options.includes(opposingDirection) && Math.random() < .7
+        ? opposingDirection
+        : options[randomInt(0, options.length - 1)];
+      if (!isDirectionOpen(decoy.dir) && options.length) decoy.dir = chooseDirection();
+      else if (options.length && Math.random() < .25) decoy.dir = chooseDirection();
     }
     const direction = DIRECTIONS[decoy.dir];
     decoy.x += direction.x * decoy.speed * dt;

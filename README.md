@@ -24,7 +24,7 @@ Correct answers advance the level after the configured correct-answer threshold.
 - **Level 4:** Radar briefly shows a green glowing arrow pointing toward the correct number.
 - **Level 5:** Shield absorbs one ghost collision.
 - **Level 6:** Ghost Freeze stops the ghosts temporarily.
-- **Level 7:** Decoy Pac-Man creates a short-lived duplicate that distracts the ghosts.
+- **Level 7:** Decoy Pac-Man creates a short-lived duplicate that tends to move opposite the real Pac-Man and distracts the ghosts.
 - **Level 8:** Time Warp slows the ghosts temporarily.
 - **Level 9:** Second Chance marks one wrong target red, keeps the question active without revealing the answer, and preserves the combo for another attempt.
 
