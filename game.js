@@ -937,17 +937,17 @@
       ctx.fillStyle = "#05051e";
       ctx.shadowBlur = 18 * visualAlpha;
       ctx.shadowColor = haloColor;
-      ctx.beginPath(); ctx.arc(0, 0, 10.6, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = haloColor;
       ctx.lineWidth = 1.8;
-      ctx.beginPath(); ctx.arc(0, 0, 10.1, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, 12.4, 0, Math.PI * 2); ctx.stroke();
       ctx.globalAlpha = visualAlpha * .72;
       ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.arc(0, 0, 8.3, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, 10.2, 0, Math.PI * 2); ctx.stroke();
       if (!settings.reducedMotion && visualAlpha > 0) {
         for (let sparkle = 0; sparkle < 4; sparkle++) {
           const angle = sparkle * Math.PI / 2 + index * .65 + game.elapsed * .28;
-          const distance = 13.2 + Math.sin(game.elapsed * 2.6 + index + sparkle) * 1.2;
+          const distance = 16.2 + Math.sin(game.elapsed * 2.6 + index + sparkle) * 1.2;
           const sparkleX = Math.cos(angle) * distance;
           const sparkleY = Math.sin(angle) * distance;
           const size = sparkle % 2 ? 1.1 : 1.7;
@@ -960,7 +960,7 @@
       ctx.shadowBlur = 14 * visualAlpha;
       ctx.shadowColor = haloColor;
       ctx.fillStyle = numberColor;
-      ctx.font = `900 ${target.value >= 100 ? 11 : 15}px system-ui`;
+      ctx.font = `900 ${target.value >= 100 ? 9.5 : 12}px system-ui`;
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.fillText(String(target.value), 0, 0);
       ctx.restore();
