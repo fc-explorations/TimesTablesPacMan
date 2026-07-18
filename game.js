@@ -584,7 +584,7 @@
       statusText.textContent = "Ghost Freeze active for 5 seconds.";
     } else if (powerUp.type === "decoy") {
       const directions = ["left", "right", "up", "down"];
-      game.decoy = { x: player.x, y: player.y, dir: directions[randomInt(0, directions.length - 1)], speed: player.speed * .8, until: game.elapsed + 7, mouth: 0 };
+      game.decoy = { x: player.x, y: player.y, dir: directions[randomInt(0, directions.length - 1)], speed: player.speed * .8, until: game.elapsed + 7, mouth: 0, destination: null };
       statusText.textContent = "Decoy Pac-Man is distracting the ghosts.";
     } else if (powerUp.type === "time-warp") {
       game.timeWarpUntil = game.elapsed + 6;
@@ -599,7 +599,7 @@
     if (!game.decoy) return;
     if (game.elapsed >= game.decoy.until) { game.decoy = null; return; }
     const decoy = game.decoy;
-    if (tileCenter(decoy)) {
+    if (!decoy.destination) {
       decoy.x = Math.floor(decoy.x) + .5;
       decoy.y = Math.floor(decoy.y) + .5;
       const tile = centerTile(decoy);
@@ -610,15 +610,26 @@
       const openDirections = ["left", "right", "up", "down"].filter(isDirectionOpen);
       const nonReverseDirections = openDirections.filter((direction) => direction !== OPPOSITE[decoy.dir]);
       const options = nonReverseDirections.length ? nonReverseDirections : openDirections;
-      if (options.length) decoy.dir = options[randomInt(0, options.length - 1)];
+      if (!options.length) return;
+      decoy.dir = options[randomInt(0, options.length - 1)];
+      const direction = DIRECTIONS[decoy.dir];
+      decoy.destination = { x: decoy.x + direction.x, y: decoy.y + direction.y };
     }
     const direction = DIRECTIONS[decoy.dir];
-    decoy.x += direction.x * decoy.speed * dt;
-    decoy.y += direction.y * decoy.speed * dt;
-    if (decoy.x < 0) decoy.x = COLS;
-    if (decoy.x > COLS) decoy.x = 0;
-    if (decoy.y < 0) decoy.y = ROWS;
-    if (decoy.y > ROWS) decoy.y = 0;
+    const destination = decoy.destination;
+    const distanceToDestination = Math.abs(direction.x ? destination.x - decoy.x : destination.y - decoy.y);
+    const step = Math.min(decoy.speed * dt, distanceToDestination);
+    decoy.x += direction.x * step;
+    decoy.y += direction.y * step;
+    if (step >= distanceToDestination) {
+      decoy.x = destination.x;
+      decoy.y = destination.y;
+      if (decoy.x < 0) decoy.x = COLS - .5;
+      if (decoy.x >= COLS) decoy.x = .5;
+      if (decoy.y < 0) decoy.y = ROWS - .5;
+      if (decoy.y >= ROWS) decoy.y = .5;
+      decoy.destination = null;
+    }
     decoy.mouth += dt * 12;
   }
 
