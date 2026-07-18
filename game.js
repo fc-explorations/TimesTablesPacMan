@@ -162,6 +162,8 @@
     }
     grid[penBottom + 1][penRight - 1] = "#";
     grid[penBottom + 1][penRight] = "#";
+    // Keep separate wall sections from touching at diagonal corners.
+    [[18, 11], [19, 11], [20, 17]].forEach(([x, y]) => { grid[y][x] = "."; });
     grid[14][0] = "."; grid[15][0] = ".";
     grid[14][COLS - 1] = "."; grid[15][COLS - 1] = ".";
     grid[0].fill("#");
