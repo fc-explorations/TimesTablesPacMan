@@ -58,6 +58,8 @@
     targets: [],
     powerPellets: powerPelletSpots.map((spot) => ({ ...spot, kind: "pellet", active: true })),
     frightenedUntil: 0,
+    hitStarted: 0,
+    respawnAt: 0,
     mode: "scatter",
     modeElapsed: 0,
     elapsed: 0,
@@ -203,6 +205,8 @@
   }
 
   function updatePlayer(dt) {
+    if (game.respawnAt > game.elapsed) return;
+    if (game.respawnAt && game.elapsed >= game.respawnAt) respawnPlayer();
     if (tileCenter(player)) {
       player.x = Math.floor(player.x) + .5;
       player.y = Math.floor(player.y) + .5;
@@ -332,10 +336,22 @@
       return;
     }
     if (ghost.state === "eyes") return;
-    player.x = spawn.x; player.y = spawn.y; player.dir = "left"; player.nextDir = "left";
+    if (game.respawnAt > game.elapsed) return;
+    game.hitStarted = game.elapsed;
+    game.respawnAt = game.elapsed + .8;
     game.combo = 0;
-    statusText.textContent = "A ghost caught you — your combo is reset.";
+    statusText.textContent = "A ghost caught you — hold on, you are respawning.";
     updateUI();
+  }
+
+  function respawnPlayer() {
+    player.x = spawn.x;
+    player.y = spawn.y;
+    player.dir = "left";
+    player.nextDir = "left";
+    game.hitStarted = 0;
+    game.respawnAt = 0;
+    statusText.textContent = "Back in the maze — your combo is reset.";
   }
 
   function update(dt) {
@@ -418,10 +434,17 @@
   }
 
   function drawPlayer() {
-    const x = player.x * TILE, y = player.y * TILE, radius = TILE * .43;
+    const hitAnimating = game.respawnAt > game.elapsed;
+    const hitTime = hitAnimating ? game.elapsed - game.hitStarted : 0;
+    const x = (player.x + (hitAnimating ? Math.sin(hitTime * 52) * .12 : 0)) * TILE;
+    const y = (player.y + (hitAnimating ? Math.cos(hitTime * 46) * .06 : 0)) * TILE;
+    const radius = TILE * .43;
     const mouth = settings.reducedMotion ? .16 : Math.abs(Math.sin(player.mouth)) * .25;
-    ctx.save(); ctx.fillStyle = "#ffd84d"; ctx.shadowBlur = 12; ctx.shadowColor = "#ffd84d";
-    ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, radius, DIRECTIONS[player.dir].angle + mouth, DIRECTIONS[player.dir].angle - mouth + Math.PI * 2); ctx.closePath(); ctx.fill(); ctx.restore();
+    ctx.save();
+    ctx.translate(x, y);
+    if (hitAnimating) ctx.rotate(Math.sin(hitTime * 48) * .18);
+    ctx.fillStyle = "#ffd84d"; ctx.shadowBlur = 12; ctx.shadowColor = "#ffd84d";
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, radius, DIRECTIONS[player.dir].angle + mouth, DIRECTIONS[player.dir].angle - mouth + Math.PI * 2); ctx.closePath(); ctx.fill(); ctx.restore();
   }
 
   function drawGhost(ghost) {
@@ -458,7 +481,7 @@
   }
 
   function startNewSession() {
-    game.score = 0; game.combo = 0; game.paused = false; game.started = false; game.frightenedUntil = 0; game.modeElapsed = 0; game.elapsed = 0; game.powerPellets.forEach((pellet) => pellet.active = true);
+    game.score = 0; game.combo = 0; game.paused = false; game.started = false; game.frightenedUntil = 0; game.hitStarted = 0; game.respawnAt = 0; game.modeElapsed = 0; game.elapsed = 0; game.powerPellets.forEach((pellet) => pellet.active = true);
     Object.assign(player, makePlayer());
     ghosts.forEach((ghost) => Object.assign(ghost, makeGhost(ghost.name, ghost.color, ghost.homeX, ghost.homeY, "left", ghost.delay)));
     nextQuestion();

@@ -17,6 +17,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Normal dots are removed.
 - Power pellets remain as optional targets and trigger frightened-ghost mode.
 - Ghost collisions reset Pac-Man and combo, but endless practice continues.
+- After a normal ghost collision, Pac-Man jiggles briefly before respawning at the start tile.
 - The session is endless until the player pauses or restarts.
 
 ## Technical Design
