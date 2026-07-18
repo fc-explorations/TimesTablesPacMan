@@ -73,6 +73,7 @@
     powerUps: [],
     superPowerUp: null,
     superStrengthUntil: 0,
+    dashUntil: 0,
     teleportCooldownUntil: 0,
     radarUntil: 0,
     shieldActive: false,
@@ -298,7 +299,7 @@
   }
 
   function makePlayer() {
-    return { x: spawn.x, y: spawn.y, dir: "left", nextDir: "left", speed: 5.2 * speedMultiplier(), mouth: 0 };
+    return { x: spawn.x, y: spawn.y, dir: "left", nextDir: "left", turnQueue: [], speed: 5.2 * speedMultiplier(), mouth: 0 };
   }
 
   function makeGhost(name, color, x, y, dir, delay) {
@@ -430,6 +431,8 @@
     if (game.level >= 7) addPowerUp("decoy");
     if (game.level >= 8) addPowerUp("time-warp");
     if (game.level >= 9) addPowerUp("second-chance");
+    if (game.level >= 10) addPowerUp("dash");
+    if (game.level >= 11) addPowerUp("ghost-bomb");
   }
 
   function nextQuestion() {
@@ -456,6 +459,7 @@
       : null;
     openTiles = getOpenTiles();
     game.superStrengthUntil = 0;
+    game.dashUntil = 0;
     game.teleportCooldownUntil = 0;
     game.radarUntil = 0;
     game.shieldActive = false;
@@ -504,7 +508,10 @@
     }
     const direction = DIRECTIONS[previousPlayer.dir] ? previousPlayer.dir : "left";
     const nextDirection = DIRECTIONS[previousPlayer.nextDir] ? previousPlayer.nextDir : direction;
-    Object.assign(player, makePlayer(), { ...position, dir: direction, nextDir: nextDirection });
+    const turnQueue = Array.isArray(previousPlayer.turnQueue)
+      ? previousPlayer.turnQueue.filter((queuedDirection) => DIRECTIONS[queuedDirection]).slice(-1)
+      : [];
+    Object.assign(player, makePlayer(), { ...position, dir: direction, nextDir: nextDirection, turnQueue });
   }
 
   function mazeSignature(grid) { return grid.map((row) => row.join("")).join("|"); }
@@ -521,7 +528,16 @@
 
   function setDirection(direction) {
     if (!DIRECTIONS[direction]) return;
-    player.nextDir = direction;
+    if (direction === player.dir) {
+      player.nextDir = direction;
+      player.turnQueue = [];
+    } else if (direction === player.nextDir) {
+      player.turnQueue = [];
+    } else if (player.nextDir === player.dir) {
+      player.nextDir = direction;
+    } else {
+      player.turnQueue = [direction];
+    }
     if (game.paused) togglePause(false);
     game.started = true;
   }
@@ -532,13 +548,26 @@
     if (tileCenter(player)) {
       player.x = Math.floor(player.x) + .5;
       player.y = Math.floor(player.y) + .5;
-      if (canMove(player, player.nextDir)) player.dir = player.nextDir;
+      let turned = false;
+      if (player.nextDir !== player.dir && canMove(player, player.nextDir)) {
+        player.dir = player.nextDir;
+        turned = true;
+      }
+      if (turned && player.turnQueue.length) {
+        player.nextDir = player.turnQueue[0];
+        player.turnQueue = [];
+      } else if (!turned && player.turnQueue.length && canMove(player, player.turnQueue[0])) {
+        player.dir = player.turnQueue[0];
+        player.nextDir = player.dir;
+        player.turnQueue = [];
+      }
       if (!canMove(player, player.dir)) return checkPlayerTargets();
     }
     const d = DIRECTIONS[player.dir];
     eraseWallInDirection(player.dir);
-    player.x += d.x * player.speed * dt;
-    player.y += d.y * player.speed * dt;
+    const dashMultiplier = game.elapsed < game.dashUntil ? 1.75 : 1;
+    player.x += d.x * player.speed * dashMultiplier * dt;
+    player.y += d.y * player.speed * dashMultiplier * dt;
     if (player.x < 0) player.x = COLS;
     if (player.x > COLS) player.x = 0;
     if (player.y < 0) player.y = ROWS;
@@ -599,6 +628,13 @@
     } else if (powerUp.type === "second-chance") {
       game.secondChanceActive = true;
       statusText.textContent = "Second Chance ready — one wrong answer will preserve your combo.";
+    } else if (powerUp.type === "dash") {
+      game.dashUntil = game.elapsed + 5;
+      statusText.textContent = "Pac-Man Dash active for 5 seconds.";
+    } else if (powerUp.type === "ghost-bomb") {
+      resetGhostsAfterCapture();
+      game.modeElapsed = 0;
+      statusText.textContent = "Ghost Bomb! The ghosts are respawning one by one.";
     }
   }
 
@@ -813,6 +849,7 @@
     player.y = spawn.y;
     player.dir = "left";
     player.nextDir = "left";
+    player.turnQueue = [];
     game.hitStarted = 0;
     game.respawnAt = 0;
     game.playerTrail = [];
@@ -1074,7 +1111,7 @@
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(rotation);
-      const colors = { radar: "#5dff9b", shield: "#73e4ff", "ghost-freeze": "#b9efff", decoy: "#a8d9ff", "time-warp": "#ffd166", "second-chance": "#ff9ed1" };
+      const colors = { radar: "#5dff9b", shield: "#73e4ff", "ghost-freeze": "#b9efff", decoy: "#a8d9ff", "time-warp": "#ffd166", "second-chance": "#ff9ed1", dash: "#ffe66b", "ghost-bomb": "#ff704d" };
       const powerColor = colors[powerUp.type] || "#b7a9ff";
       const pulse = settings.reducedMotion ? .8 : .78 + .22 * Math.sin(game.elapsed * 3 + index);
       ctx.fillStyle = powerColor;
@@ -1117,6 +1154,19 @@
         ctx.fillStyle = "#ff9ed1";
         ctx.shadowColor = "#ff9ed1";
         ctx.beginPath(); ctx.moveTo(0, 7); ctx.bezierCurveTo(-10, 1, -6, -7, 0, -3); ctx.bezierCurveTo(6, -7, 10, 1, 0, 7); ctx.closePath(); ctx.fill();
+      } else if (powerUp.type === "dash") {
+        ctx.strokeStyle = "#ffe66b";
+        ctx.shadowColor = "#ffe66b";
+        ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(6, 0); ctx.moveTo(2, -4); ctx.lineTo(7, 0); ctx.lineTo(2, 4); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-7, -5); ctx.lineTo(-3, -5); ctx.moveTo(-7, 5); ctx.lineTo(-3, 5); ctx.stroke();
+      } else if (powerUp.type === "ghost-bomb") {
+        ctx.fillStyle = "#ff704d";
+        ctx.shadowColor = "#ff704d";
+        ctx.beginPath(); ctx.arc(0, 2, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "#ffd166";
+        ctx.beginPath(); ctx.moveTo(1, -4); ctx.quadraticCurveTo(2, -8, 6, -8); ctx.stroke();
+        ctx.fillStyle = "#fff3ae";
+        ctx.beginPath(); ctx.arc(7, -8, 1.5, 0, Math.PI * 2); ctx.fill();
       }
       ctx.restore();
     });
@@ -1232,9 +1282,10 @@
     ctx.translate(x, y);
     if (hitAnimating) ctx.rotate(Math.sin(hitTime * 48) * .18);
     const superStrength = game.superStrengthUntil > game.elapsed;
-    ctx.fillStyle = superStrength ? "#ff72d2" : "#ffd84d";
-    ctx.shadowBlur = superStrength ? 18 : 12;
-    ctx.shadowColor = superStrength ? "#ff72d2" : "#ffd84d";
+    const dashActive = game.dashUntil > game.elapsed;
+    ctx.fillStyle = superStrength ? "#ff72d2" : dashActive ? "#fff1a1" : "#ffd84d";
+    ctx.shadowBlur = superStrength ? 18 : dashActive ? 23 : 12;
+    ctx.shadowColor = superStrength ? "#ff72d2" : dashActive ? "#ffe66b" : "#ffd84d";
     ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, radius, DIRECTIONS[player.dir].angle + mouth, DIRECTIONS[player.dir].angle - mouth + Math.PI * 2); ctx.closePath(); ctx.fill();
     if (game.shieldActive) {
       ctx.strokeStyle = "#73e4ff";
@@ -1293,7 +1344,7 @@
   }
 
   function startNewSession() {
-    game.score = 0; game.combo = 0; game.level = 1; game.correctAnswers = 0; game.paused = false; game.started = false; game.frightenedUntil = 0; game.superStrengthUntil = 0; game.teleportCooldownUntil = 0; game.hitStarted = 0; game.respawnAt = 0; game.modeElapsed = 0; game.elapsed = 0; game.mazeTransition = null; game.powerPellets.forEach((pellet) => pellet.active = true);
+    game.score = 0; game.combo = 0; game.level = 1; game.correctAnswers = 0; game.paused = false; game.started = false; game.frightenedUntil = 0; game.superStrengthUntil = 0; game.dashUntil = 0; game.teleportCooldownUntil = 0; game.hitStarted = 0; game.respawnAt = 0; game.modeElapsed = 0; game.elapsed = 0; game.mazeTransition = null; game.powerPellets.forEach((pellet) => pellet.active = true);
     nextQuestion();
     statusText.textContent = "Choose a direction to begin.";
     updateUI();

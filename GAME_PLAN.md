@@ -30,6 +30,8 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Level 7 unlocks Decoy Pac-Man, which sends a short-lived duplicate along random valid maze lanes to distract ghosts.
 - Level 8 unlocks Time Warp, which temporarily slows ghost movement.
 - Level 9 unlocks Second Chance, which marks one wrong target red, keeps the current question active, and preserves the combo for another attempt.
+- Level 10 unlocks Pac-Man Dash, which temporarily increases Pac-Man's movement speed without changing ghost speed.
+- Level 11 unlocks Ghost Bomb, which returns every ghost to the central house and releases them one by one on staggered timers.
 - All non-portal power-ups, including orbs and the super-strength star, are consumed when activated; paired teleporters remain reusable.
 - Levels advance after a configurable number of correct answers; wrong answers and penalties never reduce the current level.
 - Ghost collisions reset Pac-Man and combo, but endless practice continues.
@@ -50,6 +52,8 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 | Light-blue Pac-Man silhouette | Decoy Pac-Man | Sends a short-lived duplicate through random valid maze lanes to distract ghosts. |
 | Gold clock | Time Warp | Slows ghost movement temporarily. |
 | Pink heart | Second Chance | Marks one wrong target red, keeps the question active without revealing the answer, and preserves the combo for another attempt. |
+| Gold arrow with speed lines | Pac-Man Dash | Increases Pac-Man's movement speed temporarily. |
+| Red bomb with a lit fuse | Ghost Bomb | Respawns every ghost in the central house and releases them one by one. |
 
 ## Technical Design
 
