@@ -46,17 +46,16 @@
               <span>Press Pause or P to continue</span>
             </div>
           </div>
-          <p class="help-text">Arrow keys or WASD to move · Space to stop and answer · P to pause</p>
+          <p class="help-text">Arrow keys or WASD to move · Run over an answer to activate it · P to pause</p>
         </div>
 
         <aside class="side-panel" aria-label="Game controls">
           <div class="legend-card">
             <h2>How to play</h2>
-            <p>Move over a number, stop at its tile, then wait for the countdown to finish.</p>
+            <p>Numbers occupy maze lanes. Steer over an answer to activate it, or use the open lane beside it to avoid it.</p>
             <div class="legend-row"><span class="legend-dot answer-dot">7</span><span>Answer target</span></div>
             <div class="legend-row"><span class="legend-dot pellet-dot"></span><span>Power pellet</span></div>
           </div>
-          <button class="button button-primary wide" id="stop-button" type="button">Stop Pac-Man</button>
           <button class="button button-secondary wide" id="restart-button" type="button">New session</button>
           <div class="swipe-hint" aria-hidden="true">Swipe on the maze to steer</div>
         </aside>
@@ -74,7 +73,6 @@
           <div class="settings-grid">
             <label>Smallest factor <input id="min-factor" name="minFactor" type="number" min="1" max="20" step="1" /></label>
             <label>Largest factor <input id="max-factor" name="maxFactor" type="number" min="1" max="20" step="1" /></label>
-            <label>Dwell seconds <input id="dwell-duration" name="dwellDuration" type="number" min="0.5" max="10" step="0.5" /></label>
             <label>Feedback seconds <input id="feedback-duration" name="feedbackDuration" type="number" min="1" max="8" step="0.5" /></label>
           </div>
           <label class="checkbox-label"><input id="reduced-motion" name="reducedMotion" type="checkbox" /> Reduce movement and flashing effects</label>
@@ -92,10 +90,10 @@
         </div>
         <div class="instructions-content">
           <p><strong>1. Find the answer.</strong> Read the multiplication question at the top and steer Pac-Man to the matching number.</p>
-          <p><strong>2. Stop and hold.</strong> Press Space or the Stop Pac-Man button. Pac-Man will brake at the next tile center. Stay there until the countdown finishes.</p>
+          <p><strong>2. Choose your lane.</strong> Numbers sit in the maze lanes. Run over a number to activate it, or steer around it if it is not your answer.</p>
           <p><strong>3. Learn from feedback.</strong> Correct answers glow green. Wrong answers glow red and the correct answer glows white before the next question appears.</p>
-          <p><strong>4. Watch the ghosts.</strong> Avoid ghosts, or stop on a glowing power pellet to frighten them temporarily.</p>
-          <p class="instructions-controls"><strong>Controls:</strong> Arrow keys/WASD or swipe to steer · Space to stop · P to pause</p>
+          <p><strong>4. Watch the ghosts.</strong> Avoid ghosts, or run over a glowing power pellet to frighten them temporarily.</p>
+          <p class="instructions-controls"><strong>Controls:</strong> Arrow keys/WASD or swipe to steer · P to pause</p>
         </div>
       </dialog>
 

@@ -49,7 +49,6 @@ h2 { font-size: 1.05rem; }
 .stat strong { display: block; margin-top: 3px; color: var(--yellow); font-size: 1.4rem; }
 .status-pill { margin: 10px; padding: 7px 8px; border-radius: 7px; color: #1b1930; background: var(--green); font-size: .68rem; font-weight: 850; text-align: center; text-transform: uppercase; }
 .status-pill.paused { background: var(--blue); }
-.status-pill.answering { color: #241c0d; background: var(--yellow); }
 .board-wrap { min-width: 0; }
 .canvas-frame { position: relative; overflow: hidden; border: 3px solid #302a76; border-radius: 13px; background: #05050d; box-shadow: 0 0 0 1px rgba(255, 216, 77, .14), 0 18px 55px rgba(0, 0, 0, .45); }
 canvas { display: block; width: 100%; height: auto; touch-action: none; }

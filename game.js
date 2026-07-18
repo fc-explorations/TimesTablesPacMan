@@ -12,7 +12,6 @@
   const bestScoreEl = document.querySelector("#best-score");
   const pauseOverlay = document.querySelector("#pause-overlay");
   const pauseButton = document.querySelector("#pause-button");
-  const stopButton = document.querySelector("#stop-button");
   const restartButton = document.querySelector("#restart-button");
   const instructionsButton = document.querySelector("#instructions-button");
   const settingsButton = document.querySelector("#settings-button");
@@ -23,7 +22,6 @@
   const settingsForm = document.querySelector("#settings-form");
   const minFactorInput = document.querySelector("#min-factor");
   const maxFactorInput = document.querySelector("#max-factor");
-  const dwellInput = document.querySelector("#dwell-duration");
   const feedbackInput = document.querySelector("#feedback-duration");
   const reducedMotionInput = document.querySelector("#reduced-motion");
 
@@ -53,9 +51,6 @@
     best: Number(localStorage.getItem("times-table-pacman-best") || 0),
     paused: false,
     started: false,
-    stopRequested: false,
-    dwellTarget: null,
-    dwellElapsed: 0,
     feedback: null,
     revealAnswer: null,
     question: null,
@@ -78,7 +73,7 @@
   ];
 
   function defaultSettings() {
-    return { minFactor: 2, maxFactor: 12, dwellDuration: 3, feedbackDuration: 3, reducedMotion: false };
+    return { minFactor: 2, maxFactor: 12, feedbackDuration: 3, reducedMotion: false };
   }
 
   function loadSettings() {
@@ -129,7 +124,7 @@
   }
 
   function makePlayer() {
-    return { x: spawn.x, y: spawn.y, dir: "left", nextDir: "left", speed: 5.2, mouth: 0, stopped: false };
+    return { x: spawn.x, y: spawn.y, dir: "left", nextDir: "left", speed: 5.2, mouth: 0 };
   }
 
   function makeGhost(name, color, x, y, dir, delay) {
@@ -179,7 +174,7 @@
     }
     candidates.sort(() => Math.random() - .5);
     for (const value of candidates) if (values.size < 5) values.add(value);
-    const positions = [...openTiles].sort(() => Math.random() - .5).slice(0, values.size);
+    const positions = openTiles.filter((tile) => !powerPelletSpots.some((pellet) => pellet.x === tile.x && pellet.y === tile.y)).sort(() => Math.random() - .5).slice(0, values.size);
     return [...values].map((value, index) => ({ ...positions[index], value, correct: value === question.answer, state: "normal" }));
   }
 
@@ -191,25 +186,12 @@
     feedbackText.className = "feedback";
     game.feedback = null;
     game.revealAnswer = null;
-    game.dwellTarget = null;
-    game.dwellElapsed = 0;
     updateUI();
   }
 
   function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
   function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
   function distance(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
-
-  function requestStop() {
-    game.stopRequested = !game.stopRequested;
-    if (!game.stopRequested) {
-      game.dwellTarget = null;
-      game.dwellElapsed = 0;
-      player.stopped = false;
-      statusText.textContent = "Moving again.";
-    } else statusText.textContent = "Braking at the next tile…";
-    updateUI();
-  }
 
   function setDirection(direction) {
     if (!DIRECTIONS[direction]) return;
@@ -219,26 +201,11 @@
   }
 
   function updatePlayer(dt) {
-    if (game.stopRequested && tileCenter(player)) {
-      player.stopped = true;
-      player.x = Math.floor(player.x) + .5;
-      player.y = Math.floor(player.y) + .5;
-      const tile = centerTile(player);
-      const target = game.targets.find((item) => item.x === tile.x && item.y === tile.y && item.state === "normal");
-      const pellet = game.powerPellets.find((item) => item.active && item.x === tile.x && item.y === tile.y);
-      if (target || pellet) beginDwell(target || pellet, dt);
-      else { game.dwellTarget = null; game.dwellElapsed = 0; }
-      return;
-    }
-    player.stopped = false;
     if (tileCenter(player)) {
       player.x = Math.floor(player.x) + .5;
       player.y = Math.floor(player.y) + .5;
       if (canMove(player, player.nextDir)) player.dir = player.nextDir;
-      if (!canMove(player, player.dir)) {
-        player.stopped = true;
-        return;
-      }
+      if (!canMove(player, player.dir)) return checkPlayerTargets();
     }
     const d = DIRECTIONS[player.dir];
     player.x += d.x * player.speed * dt;
@@ -246,16 +213,15 @@
     if (player.x < 0) player.x = COLS;
     if (player.x > COLS) player.x = 0;
     player.mouth += dt * 12;
-    game.dwellTarget = null;
-    game.dwellElapsed = 0;
+    checkPlayerTargets();
   }
 
-  function beginDwell(target, dt) {
-    if (game.dwellTarget !== target) { game.dwellTarget = target; game.dwellElapsed = 0; }
-    game.dwellElapsed += dt;
-    statusText.textContent = `Hold… ${Math.max(0, settings.dwellDuration - game.dwellElapsed).toFixed(1)}s`;
-    statusPill.className = "status-pill answering";
-    if (game.dwellElapsed >= settings.dwellDuration) target.kind === "pellet" ? evaluatePowerPellet(target) : evaluateTarget(target);
+  function checkPlayerTargets() {
+    if (game.feedback) return;
+    const target = game.targets.find((item) => item.state === "normal" && distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
+    if (target) { evaluateTarget(target); return; }
+    const pellet = game.powerPellets.find((item) => item.active && distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
+    if (pellet) evaluatePowerPellet(pellet);
   }
 
   function evaluateTarget(target) {
@@ -273,9 +239,6 @@
     }
     game.best = Math.max(game.best, game.score);
     localStorage.setItem("times-table-pacman-best", String(game.best));
-    game.stopRequested = false;
-    game.dwellTarget = null;
-    game.dwellElapsed = 0;
     updateUI();
     window.setTimeout(nextQuestion, settings.feedbackDuration * 1000);
   }
@@ -284,9 +247,6 @@
     pellet.active = false;
     game.frightenedUntil = game.elapsed + 7;
     game.score += 50;
-    game.stopRequested = false;
-    game.dwellTarget = null;
-    game.dwellElapsed = 0;
     statusText.textContent = "Power pellet! Ghosts are frightened for 7 seconds.";
     updateUI();
     window.setTimeout(() => { pellet.active = true; }, 7000);
@@ -370,9 +330,6 @@
     if (ghost.state === "eyes") return;
     player.x = spawn.x; player.y = spawn.y; player.dir = "left"; player.nextDir = "left";
     game.combo = 0;
-    game.stopRequested = false;
-    game.dwellTarget = null;
-    game.dwellElapsed = 0;
     statusText.textContent = "A ghost caught you — your combo is reset.";
     updateUI();
   }
@@ -399,7 +356,6 @@
     drawRevealAnswer();
     drawPlayer();
     ghosts.forEach(drawGhost);
-    if (game.dwellTarget && !game.feedback) drawDwellProgress();
     if (game.frightenedUntil > game.elapsed) drawFrightenedTimer();
   }
 
@@ -473,13 +429,6 @@
     ctx.restore();
   }
 
-  function drawDwellProgress() {
-    const target = game.dwellTarget;
-    const x = (target.x + .5) * TILE, y = (target.y + .5) * TILE;
-    ctx.save(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5; ctx.beginPath();
-    ctx.arc(x, y, TILE * .52, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(game.dwellElapsed / settings.dwellDuration, 0, 1)); ctx.stroke(); ctx.restore();
-  }
-
   function drawFrightenedTimer() {
     const remaining = game.frightenedUntil - game.elapsed;
     ctx.save(); ctx.fillStyle = "#cdd1ff"; ctx.font = "700 10px system-ui"; ctx.textAlign = "center"; ctx.fillText(`POWER ${remaining.toFixed(1)}s`, canvas.width / (canvas.width / (COLS * TILE)) / 2, 12); ctx.restore();
@@ -489,10 +438,9 @@
     scoreEl.textContent = String(game.score);
     comboEl.textContent = String(game.combo);
     bestScoreEl.textContent = String(game.best);
-    statusPill.textContent = game.paused ? "Paused" : game.stopRequested ? "Answering" : "Playing";
-    statusPill.className = `status-pill${game.paused ? " paused" : game.stopRequested && game.dwellTarget ? " answering" : ""}`;
+    statusPill.textContent = game.paused ? "Paused" : "Playing";
+    statusPill.className = `status-pill${game.paused ? " paused" : ""}`;
     pauseButton.textContent = game.paused ? "Resume" : "Pause";
-    stopButton.textContent = game.stopRequested ? "Move again" : "Stop Pac-Man";
     pauseOverlay.hidden = !game.paused;
   }
 
@@ -503,7 +451,7 @@
   }
 
   function startNewSession() {
-    game.score = 0; game.combo = 0; game.paused = false; game.started = false; game.stopRequested = false; game.frightenedUntil = 0; game.modeElapsed = 0; game.elapsed = 0; game.powerPellets.forEach((pellet) => pellet.active = true);
+    game.score = 0; game.combo = 0; game.paused = false; game.started = false; game.frightenedUntil = 0; game.modeElapsed = 0; game.elapsed = 0; game.powerPellets.forEach((pellet) => pellet.active = true);
     Object.assign(player, makePlayer());
     ghosts.forEach((ghost) => Object.assign(ghost, makeGhost(ghost.name, ghost.color, ghost.homeX, ghost.homeY, "left", ghost.delay)));
     nextQuestion();
@@ -512,7 +460,7 @@
   }
 
   function populateSettings() {
-    minFactorInput.value = settings.minFactor; maxFactorInput.value = settings.maxFactor; dwellInput.value = settings.dwellDuration; feedbackInput.value = settings.feedbackDuration; reducedMotionInput.checked = settings.reducedMotion;
+    minFactorInput.value = settings.minFactor; maxFactorInput.value = settings.maxFactor; feedbackInput.value = settings.feedbackDuration; reducedMotionInput.checked = settings.reducedMotion;
   }
 
   function openSettings(open) {
@@ -539,14 +487,13 @@
     event.preventDefault();
     const min = clamp(Math.round(Number(minFactorInput.value) || 2), 1, 20);
     const max = clamp(Math.round(Number(maxFactorInput.value) || 12), min, 20);
-    settings.minFactor = min; settings.maxFactor = max; settings.dwellDuration = clamp(Number(dwellInput.value) || 3, .5, 10); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 3, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
+    settings.minFactor = min; settings.maxFactor = max; settings.feedbackDuration = clamp(Number(feedbackInput.value) || 3, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
     saveSettings(); openSettings(false); nextQuestion(); statusText.textContent = "Settings saved.";
   }
 
   function handleKey(event) {
     const directionKeys = { ArrowLeft: "left", a: "left", A: "left", ArrowRight: "right", d: "right", D: "right", ArrowUp: "up", w: "up", W: "up", ArrowDown: "down", s: "down", S: "down" };
     if (directionKeys[event.key]) { event.preventDefault(); setDirection(directionKeys[event.key]); }
-    else if (event.key === " ") { event.preventDefault(); requestStop(); }
     else if (event.key.toLowerCase() === "p") { event.preventDefault(); togglePause(); }
   }
 
@@ -566,7 +513,6 @@
   document.addEventListener("keydown", handleKey);
   canvas.addEventListener("touchstart", handleTouchStart, { passive: true });
   canvas.addEventListener("touchend", handleTouchEnd, { passive: true });
-  stopButton.addEventListener("click", requestStop);
   pauseButton.addEventListener("click", () => togglePause());
   restartButton.addEventListener("click", startNewSession);
   instructionsButton.addEventListener("click", () => openInstructions(true));
