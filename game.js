@@ -628,11 +628,24 @@
   }
 
   function drawPowerPellets() {
-    game.powerPellets.forEach((pellet) => {
+    game.powerPellets.forEach((pellet, index) => {
       if (!pellet.active) return;
       const x = (pellet.x + .5) * TILE, y = (pellet.y + .5) * TILE;
-      ctx.save(); ctx.fillStyle = "#fff"; ctx.shadowBlur = 14; ctx.shadowColor = "#fff";
-      ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      const rotation = settings.reducedMotion ? 0 : game.elapsed * 2.6 + index * 1.4;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+      ctx.fillStyle = "#319dff";
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = "#319dff";
+      ctx.beginPath(); ctx.arc(0, 0, 6.5, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#bdeaff";
+      ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.ellipse(0, 0, 10, 3, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = .8;
+      ctx.fillStyle = "#e5f8ff";
+      ctx.beginPath(); ctx.arc(-2.2, -2.4, 1.7, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
     });
   }
 

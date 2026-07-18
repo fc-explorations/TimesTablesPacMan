@@ -19,7 +19,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - A wrong completed equation turns red, then the corrected equation appears in white, reduces score and resets combo, and then causes a new question and target layout.
 - While the next question is pending, all maze numbers turn white, number activation is locked, and a circular countdown appears under the question.
 - Normal dots are removed.
-- Power pellets remain as optional targets and trigger frightened-ghost mode.
+- Rotating blue orbs remain as optional targets and trigger frightened-ghost mode.
 - Ghost collisions reset Pac-Man and combo, but endless practice continues.
 - After a normal ghost collision, Pac-Man jiggles briefly before respawning at the start tile.
 - After capture, ghosts return to the central rectangle and release one by one on staggered timers.
