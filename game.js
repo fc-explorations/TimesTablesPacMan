@@ -586,7 +586,7 @@
   }
 
   function drawMaze() {
-    const wallInset = 2;
+    const wallInset = 1;
     ctx.fillStyle = "#161448";
     for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (maze[y][x] === "#") ctx.fillRect(x * TILE + wallInset, y * TILE + wallInset, TILE - wallInset * 2, TILE - wallInset * 2);
     ctx.strokeStyle = "#4b52db"; ctx.lineWidth = 1.5;
