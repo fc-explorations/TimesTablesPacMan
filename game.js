@@ -12,7 +12,6 @@
   const comboEl = document.querySelector("#combo");
   const bestScoreEl = document.querySelector("#best-score");
   const pauseOverlay = document.querySelector("#pause-overlay");
-  const pauseButton = document.querySelector("#pause-button");
   const restartButton = document.querySelector("#restart-button");
   const instructionsButton = document.querySelector("#instructions-button");
   const settingsButton = document.querySelector("#settings-button");
@@ -656,7 +655,6 @@
     scoreEl.textContent = String(game.score);
     comboEl.textContent = String(game.combo);
     bestScoreEl.textContent = String(game.best);
-    pauseButton.textContent = game.paused ? "Resume" : "Pause";
     pauseOverlay.hidden = !game.paused;
     if (game.feedback) {
       const remaining = Math.max(0, game.feedback.until - game.elapsed);
@@ -754,7 +752,6 @@
   document.addEventListener("keydown", handleKey);
   canvas.addEventListener("touchstart", handleTouchStart, { passive: true });
   canvas.addEventListener("touchend", handleTouchEnd, { passive: true });
-  pauseButton.addEventListener("click", () => togglePause());
   restartButton.addEventListener("click", startNewSession);
   instructionsButton.addEventListener("click", () => openInstructions(true));
   settingsButton.addEventListener("click", () => openSettings(!settingsDialog.open));
