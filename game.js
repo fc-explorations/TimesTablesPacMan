@@ -294,9 +294,10 @@
     const positions = [];
     for (let index = 0; index < count; index++) {
       const bucket = usableBuckets[index % usableBuckets.length] || candidates;
-      const spaced = bucket.filter((tile) => positions.every((chosen) => Math.hypot(tile.x - chosen.x, tile.y - chosen.y) >= 4));
-      const unused = (spaced.length ? spaced : bucket).filter((tile) => !positions.some((chosen) => chosen.x === tile.x && chosen.y === tile.y));
-      const pool = unused.length ? unused : (spaced.length ? spaced : bucket);
+      const isSafe = (tile) => positions.every((chosen) => chosen.x !== tile.x && chosen.y !== tile.y && Math.hypot(tile.x - chosen.x, tile.y - chosen.y) >= 4);
+      const spaced = bucket.filter(isSafe);
+      const fallback = candidates.filter(isSafe);
+      const pool = spaced.length ? spaced : fallback.length ? fallback : bucket;
       positions.push(pool[randomInt(0, pool.length - 1)]);
     }
     return positions;

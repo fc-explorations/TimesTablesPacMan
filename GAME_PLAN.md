@@ -12,6 +12,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Each question places one correct answer and nearby distractors on walkable maze tiles.
 - Every new question regenerates a validated random maze layout.
 - Answer targets are bucketed across the maze so they are spread through different regions.
+- Targets are kept off the same row and column, with minimum spacing, so they do not form an unavoidable line across a corridor.
 - Number targets are floating yellow labels without surrounding circles; feedback changes their glow color.
 - Number targets activate immediately when Pac-Man runs over them.
 - A correct completed equation turns green, increases score and combo, and causes a new question and target layout.
