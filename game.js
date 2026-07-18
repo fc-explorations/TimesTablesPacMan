@@ -363,19 +363,19 @@
   }
 
   function regenerateMaze() {
-    const previousSignature = maze.map((row) => row.join("")).join("|");
-    let nextMaze = createMaze();
-    let attempts = 0;
-    while (nextMaze.map((row) => row.join("")).join("|") === previousSignature && attempts < 8) {
+    const previousSignature = mazeSignature(maze);
+    let nextMaze;
+    do {
       nextMaze = createMaze();
-      attempts++;
-    }
+    } while (mazeSignature(nextMaze) === previousSignature);
     maze = nextMaze;
     openTiles = getOpenTiles();
     Object.assign(player, makePlayer());
     ghosts.forEach((ghost) => Object.assign(ghost, makeGhost(ghost.name, ghost.color, ghost.homeX, ghost.homeY, "left", ghost.delay)));
     game.powerPellets.forEach((pellet) => { pellet.active = true; });
   }
+
+  function mazeSignature(grid) { return grid.map((row) => row.join("")).join("|"); }
 
   function randomInt(min, max, randomSource = Math.random) { return Math.floor(randomSource() * (max - min + 1)) + min; }
   function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
