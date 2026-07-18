@@ -1008,15 +1008,14 @@
     ctx.save();
     ctx.translate(player.x * TILE, player.y * TILE);
     ctx.rotate(Math.atan2(dy, dx));
-    ctx.strokeStyle = "#5dff9b";
-    ctx.fillStyle = "#5dff9b";
-    ctx.shadowBlur = 12;
-    ctx.shadowColor = "#5dff9b";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#48ff86";
+    ctx.fillStyle = "#48ff86";
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = "#48ff86";
+    ctx.lineWidth = 2.5;
     const arrowLength = TILE * .86;
-    const arrowStart = -arrowLength / 2;
-    const arrowTip = arrowLength / 2;
-    ctx.beginPath(); ctx.moveTo(arrowStart, 0); ctx.lineTo(arrowTip, 0); ctx.stroke();
+    const arrowTip = arrowLength;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(arrowTip, 0); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(arrowTip, 0); ctx.lineTo(arrowTip - 6, -4); ctx.lineTo(arrowTip - 6, 4); ctx.closePath(); ctx.fill();
     ctx.restore();
   }
