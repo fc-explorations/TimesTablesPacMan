@@ -64,7 +64,7 @@ h2 { font-size: 1.05rem; }
 .countdown-ring::before { position: absolute; inset: 5px; border-radius: 50%; background: #1d1b38; content: ""; }
 .countdown-ring span { position: relative; color: var(--ink); font-size: .95rem; font-weight: 850; }
 .game-layout { display: grid; grid-template-columns: minmax(300px, 360px) minmax(560px, 1fr) minmax(240px, 300px); align-items: start; justify-content: center; gap: 18px; }
-.score-panel, .settings-panel { border: 1px solid var(--line); border-radius: 18px; background: rgba(8, 10, 52, .9); }
+.settings-panel { border: 1px solid var(--line); border-radius: 18px; background: rgba(8, 10, 52, .9); }
 .score-panel { display: grid; gap: 12px; overflow: visible; background: transparent; }
 .stat { display: flex; align-items: center; gap: 16px; min-height: 112px; padding: 20px 22px; border: 1px solid rgba(80, 72, 192, .55); border-radius: 16px; background: radial-gradient(circle at 15% 0, rgba(49, 42, 133, .32), transparent 58%), linear-gradient(145deg, rgba(14, 15, 69, .96), rgba(7, 9, 43, .94)); box-shadow: inset 0 0 22px rgba(57, 46, 180, .12), 0 0 16px rgba(33, 24, 126, .14); }
 .stat span { display: block; color: var(--muted); font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
