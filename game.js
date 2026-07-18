@@ -42,8 +42,8 @@
   const maze = createMaze();
   const spawn = { x: 13.5, y: 23.5 };
   const ghostHome = { x: 13.5, y: 15.5 };
-  const scatterCorners = [{ x: 1, y: 1 }, { x: 26, y: 1 }, { x: 1, y: 29 }, { x: 26, y: 29 }];
-  const powerPelletSpots = [{ x: 1, y: 3 }, { x: 26, y: 3 }, { x: 1, y: 27 }, { x: 26, y: 27 }];
+  const scatterCorners = [{ x: 2, y: 2 }, { x: 25, y: 2 }, { x: 2, y: 27 }, { x: 25, y: 27 }];
+  const powerPelletSpots = [{ x: 2, y: 3 }, { x: 25, y: 3 }, { x: 2, y: 27 }, { x: 25, y: 27 }];
   const openTiles = getOpenTiles();
 
   const game = {
@@ -94,29 +94,43 @@
   }
 
   function createMaze() {
+    // A compact 14×15 blueprint is expanded into 2×2 open blocks. This keeps
+    // every regular corridor two cells wide while preserving a classic maze silhouette.
+    const blueprint = [
+      "##############",
+      "#............#",
+      "#.###.##.###.#",
+      "#.#........#.#",
+      "#.#.##..##.#.#",
+      "#.#.#....#.#.#",
+      "#...#.#...#..#",
+      "##.#.......###",
+      "#...#.#...#..#",
+      "#.#.#....#.#.#",
+      "#.#.##..##.#.#",
+      "#.#........#.#",
+      "#.###.##.###.#",
+      "#............#",
+      "##############"
+    ];
     const grid = Array.from({ length: ROWS }, () => Array(COLS).fill("#"));
-    const carve = (x, y, width, height) => {
-      for (let row = y; row < y + height; row++) for (let col = x; col < x + width; col++) grid[row][col] = ".";
-    };
-    carve(1, 1, 26, 29);
-    const wall = (x, y, width, height) => {
-      for (let row = y; row < y + height; row++) for (let col = x; col < x + width; col++) grid[row][col] = "#";
-    };
-    wall(2, 2, 5, 3); wall(21, 2, 5, 3);
-    wall(9, 2, 3, 3); wall(16, 2, 3, 3);
-    wall(2, 7, 5, 2); wall(21, 7, 5, 2);
-    wall(9, 7, 3, 5); wall(16, 7, 3, 5);
-    wall(2, 13, 5, 2); wall(21, 13, 5, 2);
-    wall(9, 13, 10, 2);
-    wall(2, 18, 5, 2); wall(21, 18, 5, 2);
-    wall(9, 18, 3, 5); wall(16, 18, 3, 5);
-    wall(2, 25, 5, 2); wall(21, 25, 5, 2);
-    wall(9, 26, 3, 3); wall(16, 26, 3, 3);
-    carve(12, 13, 4, 5);
-    carve(13, 14, 2, 4);
-    grid[15][0] = "."; grid[15][27] = ".";
-    // A few doors keep the center and side lanes connected while retaining the maze silhouette.
-    [[7, 8], [20, 8], [7, 19], [20, 19], [7, 26], [20, 26], [8, 14], [19, 14]].forEach(([x, y]) => { grid[y][x] = "."; });
+    blueprint.forEach((row, blueprintY) => {
+      for (let blueprintX = 0; blueprintX < row.length; blueprintX++) {
+        if (row[blueprintX] !== ".") continue;
+        for (let y = blueprintY * 2; y < blueprintY * 2 + 2 && y < ROWS; y++) {
+          for (let x = blueprintX * 2; x < blueprintX * 2 + 2 && x < COLS; x++) grid[y][x] = ".";
+        }
+      }
+    });
+    // The classic side tunnel is two cells high and connects into the middle lanes.
+    for (const y of [14, 15]) {
+      for (let x = 0; x < 6; x++) grid[y][x] = ".";
+      for (let x = 22; x < COLS; x++) grid[y][x] = ".";
+    }
+    grid[14][0] = "."; grid[15][0] = ".";
+    grid[14][COLS - 1] = "."; grid[15][COLS - 1] = ".";
+    grid[0].fill("#");
+    grid[ROWS - 1].fill("#");
     return grid;
   }
 
