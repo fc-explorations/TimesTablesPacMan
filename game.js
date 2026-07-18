@@ -5,6 +5,9 @@
   const ctx = canvas.getContext("2d");
   const questionText = document.querySelector("#question-text");
   const statusText = document.querySelector("#status-text");
+  const questionCountdown = document.querySelector("#question-countdown");
+  const countdownRing = document.querySelector("#countdown-ring");
+  const countdownValue = document.querySelector("#countdown-value");
   const statusPill = document.querySelector("#status-pill");
   const scoreEl = document.querySelector("#score");
   const comboEl = document.querySelector("#combo");
@@ -310,6 +313,7 @@
     questionText.textContent = game.question.text;
     questionText.className = "question";
     game.feedback = null;
+    questionCountdown.hidden = true;
     updateUI();
   }
 
@@ -543,7 +547,8 @@
       ctx.save();
       ctx.translate(x, y + floatOffset);
       ctx.rotate(tilt);
-      if (state === "correct") { ctx.shadowBlur = 20; ctx.shadowColor = "#48e49a"; ctx.fillStyle = "#48e49a"; }
+      if (game.feedback) { ctx.shadowBlur = 12; ctx.shadowColor = "#fff"; ctx.fillStyle = "#fff"; }
+      else if (state === "correct") { ctx.shadowBlur = 20; ctx.shadowColor = "#48e49a"; ctx.fillStyle = "#48e49a"; }
       else if (state === "wrong") { ctx.shadowBlur = 20; ctx.shadowColor = "#ff6577"; ctx.fillStyle = "#ff6577"; }
       else { ctx.shadowBlur = 12; ctx.shadowColor = "#ffd84d"; ctx.fillStyle = "#ffd84d"; }
       ctx.font = `900 ${target.value >= 100 ? 11 : 15}px system-ui`;
@@ -601,6 +606,16 @@
     statusPill.className = `status-pill${game.paused ? " paused" : ""}`;
     pauseButton.textContent = game.paused ? "Resume" : "Pause";
     pauseOverlay.hidden = !game.paused;
+    if (game.feedback) {
+      const remaining = Math.max(0, game.feedback.until - game.elapsed);
+      const progress = clamp(remaining / settings.feedbackDuration, 0, 1);
+      questionCountdown.hidden = false;
+      countdownValue.textContent = String(Math.ceil(remaining));
+      countdownRing.style.setProperty("--progress", `${progress * 100}%`);
+      questionCountdown.setAttribute("aria-label", `Next question in ${Math.ceil(remaining)} seconds`);
+    } else {
+      questionCountdown.hidden = true;
+    }
   }
 
   function togglePause(force) {

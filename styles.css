@@ -41,6 +41,10 @@ h2 { font-size: 1.05rem; }
 .question.answer-good { color: var(--green); text-shadow: 0 0 18px rgba(72, 228, 154, .45); }
 .question.answer-bad { color: var(--red); text-shadow: 0 0 18px rgba(255, 101, 119, .45); }
 .question.answer-reveal { color: #fff; text-shadow: 0 0 18px rgba(255, 255, 255, .45); }
+.countdown-wrap { display: grid; place-items: center; margin-top: 18px; }
+.countdown-ring { --progress: 100%; position: relative; display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; background: conic-gradient(var(--pink) var(--progress), rgba(255, 255, 255, .12) 0); }
+.countdown-ring::before { position: absolute; inset: 5px; border-radius: 50%; background: #1d1b38; content: ""; }
+.countdown-ring span { position: relative; color: var(--ink); font-size: .95rem; font-weight: 850; }
 .game-layout { display: grid; grid-template-columns: 280px minmax(420px, 672px) 190px; align-items: start; justify-content: center; gap: 18px; }
 .score-panel, .settings-panel { border: 1px solid var(--line); border-radius: 16px; background: rgba(23, 22, 43, .9); }
 .score-panel { display: grid; gap: 1px; overflow: hidden; }

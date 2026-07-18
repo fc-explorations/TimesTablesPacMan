@@ -17,6 +17,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Number targets activate immediately when Pac-Man runs over them.
 - A correct completed equation turns green, increases score and combo, and causes a new question and target layout.
 - A wrong completed equation turns red, then the corrected equation appears in white, reduces score and resets combo, and then causes a new question and target layout.
+- While the next question is pending, all maze numbers turn white, number activation is locked, and a circular countdown appears under the question.
 - Normal dots are removed.
 - Power pellets remain as optional targets and trigger frightened-ghost mode.
 - Ghost collisions reset Pac-Man and combo, but endless practice continues.
