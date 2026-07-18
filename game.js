@@ -918,21 +918,48 @@
       const feedbackProgress = game.feedback && !settings.reducedMotion ? clamp((game.elapsed - game.feedback.started) / settings.feedbackDuration, 0, 1) : game.feedback ? 1 : 0;
       const revealProgress = game.targetReveal && !settings.reducedMotion ? clamp((game.elapsed - game.targetReveal.started) / settings.feedbackDuration, 0, 1) : game.targetReveal ? 1 : 0;
       const targetAlpha = game.feedback ? 1 - feedbackProgress : game.targetReveal ? revealProgress : 1;
-      ctx.save();
-      ctx.translate(x, y + floatOffset);
-      ctx.rotate(tilt);
-      if (state === "correct") { ctx.shadowBlur = 20; ctx.shadowColor = "#48e49a"; ctx.fillStyle = "#48e49a"; }
-      else if (state === "wrong") { ctx.shadowBlur = 20; ctx.shadowColor = "#ff6577"; ctx.fillStyle = "#ff6577"; }
+      const visualAlpha = state === "normal" ? targetAlpha : 1;
+      let numberColor = "#fff5df";
+      let haloColor = "#ffad4d";
+      if (state === "correct") { numberColor = "#48e49a"; haloColor = "#48e49a"; }
+      else if (state === "wrong") { numberColor = "#ff6577"; haloColor = "#ff6577"; }
       else if (game.feedback || game.targetReveal) {
         const red = Math.round(255 * targetAlpha);
         const green = Math.round(173 * targetAlpha);
         const blue = Math.round(77 * targetAlpha);
-        const targetColor = `rgb(${red} ${green} ${blue})`;
-        ctx.shadowBlur = 12 * targetAlpha;
-        ctx.shadowColor = targetColor;
-        ctx.fillStyle = targetColor;
+        numberColor = `rgb(${red} ${green} ${blue})`;
+        haloColor = numberColor;
       }
-    else { ctx.shadowBlur = 12; ctx.shadowColor = "#ffad4d"; ctx.fillStyle = "#ffad4d"; }
+      ctx.save();
+      ctx.translate(x, y + floatOffset);
+      ctx.rotate(tilt);
+      ctx.globalAlpha = visualAlpha;
+      ctx.fillStyle = "#05051e";
+      ctx.shadowBlur = 18 * visualAlpha;
+      ctx.shadowColor = haloColor;
+      ctx.beginPath(); ctx.arc(0, 0, 10.6, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = haloColor;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.arc(0, 0, 10.1, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = visualAlpha * .72;
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(0, 0, 8.3, 0, Math.PI * 2); ctx.stroke();
+      if (!settings.reducedMotion && visualAlpha > 0) {
+        for (let sparkle = 0; sparkle < 4; sparkle++) {
+          const angle = sparkle * Math.PI / 2 + index * .65 + game.elapsed * .28;
+          const distance = 13.2 + Math.sin(game.elapsed * 2.6 + index + sparkle) * 1.2;
+          const sparkleX = Math.cos(angle) * distance;
+          const sparkleY = Math.sin(angle) * distance;
+          const size = sparkle % 2 ? 1.1 : 1.7;
+          ctx.globalAlpha = visualAlpha * (.55 + .35 * Math.sin(game.elapsed * 3 + sparkle));
+          ctx.fillStyle = sparkle % 2 ? "#fff5df" : haloColor;
+          ctx.beginPath(); ctx.moveTo(sparkleX, sparkleY - size); ctx.lineTo(sparkleX + size, sparkleY); ctx.lineTo(sparkleX, sparkleY + size); ctx.lineTo(sparkleX - size, sparkleY); ctx.closePath(); ctx.fill();
+        }
+      }
+      ctx.globalAlpha = visualAlpha;
+      ctx.shadowBlur = 14 * visualAlpha;
+      ctx.shadowColor = haloColor;
+      ctx.fillStyle = numberColor;
       ctx.font = `900 ${target.value >= 100 ? 11 : 15}px system-ui`;
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.fillText(String(target.value), 0, 0);
