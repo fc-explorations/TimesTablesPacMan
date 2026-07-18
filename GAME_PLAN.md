@@ -13,7 +13,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Every new question regenerates a validated random maze layout.
 - Answer targets are bucketed across the maze so they are spread through different regions.
 - Targets are kept off the same row and column, with minimum spacing, so they do not form an unavoidable line across a corridor.
-- Number targets are floating yellow labels without surrounding circles; feedback changes their glow color.
+- Number targets are floating orange labels without surrounding circles; feedback changes their glow color.
 - Number targets activate immediately when Pac-Man runs over them.
 - A correct completed equation turns green, increases score and combo, and causes a new question and target layout.
 - A wrong completed equation turns red, then the corrected equation appears in white, reduces score and resets combo, and then causes a new question and target layout.
@@ -53,5 +53,5 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 
 - Factor range: 2–12.
 - Feedback duration: 2 seconds.
-- Number targets per question: one correct plus a configurable number of distractors, defaulting to four.
+- Number targets per question: one correct plus a configurable number of distractors, defaulting to eight.
 - Score and combo are session-only; settings persist locally.

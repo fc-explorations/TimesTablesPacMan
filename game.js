@@ -82,7 +82,7 @@
   ];
 
   function defaultSettings() {
-    return { minFactor: 2, maxFactor: 12, distractorCount: 4, feedbackDuration: 2, reducedMotion: false };
+    return { minFactor: 2, maxFactor: 12, distractorCount: 8, feedbackDuration: 2, reducedMotion: false };
   }
 
   function loadSettings() {
@@ -323,7 +323,7 @@
       candidates.push(min * max, min * (max + 1), Math.max(1, (min - 1) * max));
     }
     candidates.sort(() => Math.random() - .5);
-    const targetCount = clamp(Math.round(Number(settings.distractorCount) || 4) + 1, 2, 9);
+    const targetCount = clamp(Math.round(Number(settings.distractorCount) || 8) + 1, 2, 9);
     for (const value of candidates) if (values.size < targetCount) values.add(value);
     const positions = chooseSpreadPositions(values.size);
     return [...values].map((value, index) => ({ ...positions[index], value, correct: value === question.answer, state: "normal" }));
@@ -611,7 +611,7 @@
       if (state === "correct") { ctx.shadowBlur = 20; ctx.shadowColor = "#48e49a"; ctx.fillStyle = "#48e49a"; }
       else if (state === "wrong") { ctx.shadowBlur = 20; ctx.shadowColor = "#ff6577"; ctx.fillStyle = "#ff6577"; }
       else if (game.feedback) { ctx.shadowBlur = 12; ctx.shadowColor = "#fff"; ctx.fillStyle = "#fff"; }
-      else { ctx.shadowBlur = 12; ctx.shadowColor = "#ffd84d"; ctx.fillStyle = "#ffd84d"; }
+    else { ctx.shadowBlur = 12; ctx.shadowColor = "#ffad4d"; ctx.fillStyle = "#ffad4d"; }
       ctx.font = `900 ${target.value >= 100 ? 11 : 15}px system-ui`;
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.fillText(String(target.value), 0, 0);
@@ -737,7 +737,7 @@
     event.preventDefault();
     const min = clamp(Math.round(Number(minFactorInput.value) || 2), 1, 20);
     const max = clamp(Math.round(Number(maxFactorInput.value) || 12), min, 20);
-    settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 4), 1, 8); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
+    settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 8), 1, 8); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
     saveSettings(); openSettings(false); nextQuestion(); statusText.textContent = "Settings saved.";
   }
 
