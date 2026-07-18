@@ -80,14 +80,14 @@
         </div>
         <form id="settings-form">
           <div class="settings-grid">
-            <label>Smallest factor <input id="min-factor" name="minFactor" type="number" min="1" max="20" step="1" /></label>
-            <label>Largest factor <input id="max-factor" name="maxFactor" type="number" min="1" max="20" step="1" /></label>
-            <label>Other numbers <input id="distractor-count" name="distractorCount" type="number" min="1" max="8" step="1" /></label>
-            <label>Correct answers per level <input id="correct-answers-per-level" name="correctAnswersPerLevel" type="number" min="1" max="20" step="1" /></label>
-            <label>Game speed <input id="game-speed" name="gameSpeed" type="number" min="0.5" max="2" step="0.1" /></label>
-            <label>Feedback seconds <input id="feedback-duration" name="feedbackDuration" type="number" min="1" max="8" step="0.5" /></label>
+            <label><span class="setting-label"><svg class="setting-icon" aria-hidden="true"><use href="icons.svg#number-small"></use></svg>Smallest factor</span><input id="min-factor" name="minFactor" type="number" min="1" max="20" step="1" /></label>
+            <label><span class="setting-label"><svg class="setting-icon" aria-hidden="true"><use href="icons.svg#number-large"></use></svg>Largest factor</span><input id="max-factor" name="maxFactor" type="number" min="1" max="20" step="1" /></label>
+            <label><span class="setting-label"><svg class="setting-icon" aria-hidden="true"><use href="icons.svg#numbers"></use></svg>Other numbers</span><input id="distractor-count" name="distractorCount" type="number" min="1" max="8" step="1" /></label>
+            <label><span class="setting-label"><svg class="setting-icon" aria-hidden="true"><use href="icons.svg#target"></use></svg>Correct answers per level</span><input id="correct-answers-per-level" name="correctAnswersPerLevel" type="number" min="1" max="20" step="1" /></label>
+            <label><span class="setting-label"><svg class="setting-icon" aria-hidden="true"><use href="icons.svg#bolt"></use></svg>Game speed</span><input id="game-speed" name="gameSpeed" type="number" min="0.5" max="2" step="0.1" /></label>
+            <label><span class="setting-label"><svg class="setting-icon" aria-hidden="true"><use href="icons.svg#timer"></use></svg>Feedback seconds</span><input id="feedback-duration" name="feedbackDuration" type="number" min="1" max="8" step="0.5" /></label>
           </div>
-          <label class="checkbox-label"><input id="reduced-motion" name="reducedMotion" type="checkbox" /> Reduce movement and flashing effects</label>
+          <label class="checkbox-label"><input id="reduced-motion" name="reducedMotion" type="checkbox" /><span class="setting-label"><svg class="setting-icon" aria-hidden="true"><use href="icons.svg#motion"></use></svg>Reduce movement and flashing effects</span></label>
           <div class="settings-actions"><button class="button button-primary" type="submit">Save settings</button></div>
         </form>
       </dialog>

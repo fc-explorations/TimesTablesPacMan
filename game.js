@@ -82,6 +82,7 @@
     secondChanceActive: false,
     collisionGraceUntil: 0,
     dissolvingWalls: [],
+    playerTrail: [],
     frightenedUntil: 0,
     hitStarted: 0,
     respawnAt: 0,
@@ -464,6 +465,7 @@
     game.secondChanceActive = false;
     game.collisionGraceUntil = 0;
     game.dissolvingWalls = [];
+    game.playerTrail = [];
     setupLevelPowerUps();
     restorePlayerAfterMaze(previousPlayer);
     ghosts.forEach((ghost) => Object.assign(ghost, makeGhost(ghost.name, ghost.color, ghost.homeX, ghost.homeY, "left", ghost.delay)));
@@ -565,6 +567,7 @@
     const destination = destinations[randomInt(0, destinations.length - 1)];
     player.x = destination.x + .5;
     player.y = destination.y + .5;
+    game.playerTrail = [];
     game.teleportCooldownUntil = game.elapsed + .6;
     statusText.textContent = "Teleported!";
   }
@@ -812,6 +815,7 @@
     player.nextDir = "left";
     game.hitStarted = 0;
     game.respawnAt = 0;
+    game.playerTrail = [];
     statusText.textContent = "Back in the maze — your combo is reset.";
   }
 
@@ -819,6 +823,7 @@
     if (game.paused) return;
     game.elapsed += dt;
     updatePlayer(dt);
+    updatePlayerTrail();
     updateDecoy(dt);
     updateGhosts(dt);
     if (game.feedback && game.elapsed >= game.feedback.until) game.feedback = null;
@@ -842,6 +847,7 @@
     drawSuperPowerUp();
     drawPowerUps();
     drawTargets();
+    drawPlayerTrail();
     drawPlayer();
     drawDecoy();
     drawRadarArrow();
@@ -1165,6 +1171,54 @@
     ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(arrowTip, 0); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(arrowTip, 0); ctx.lineTo(arrowTip - 6, -4); ctx.lineTo(arrowTip - 6, 4); ctx.closePath(); ctx.fill();
     ctx.restore();
+  }
+
+  function updatePlayerTrail() {
+    const trailLifetime = .2;
+    game.playerTrail = game.playerTrail.filter((sample) => game.elapsed - sample.created < trailLifetime);
+    if (game.respawnAt > game.elapsed) return;
+    const last = game.playerTrail[game.playerTrail.length - 1];
+    if (!last || Math.hypot(player.x - last.x, player.y - last.y) > .1) {
+      game.playerTrail.push({ x: player.x, y: player.y, dir: player.dir, created: game.elapsed });
+    }
+  }
+
+  function drawPlayerTrail() {
+    if (settings.reducedMotion) return;
+    const trailLifetime = .2;
+    game.playerTrail.forEach((sample, index) => {
+      const age = clamp((game.elapsed - sample.created) / trailLifetime, 0, 1);
+      const alpha = (1 - age) * .18;
+      if (alpha <= 0) return;
+      const direction = DIRECTIONS[sample.dir];
+      ctx.save();
+      ctx.translate(sample.x * TILE, sample.y * TILE);
+      ctx.rotate(direction ? direction.angle : 0);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = "#ffd84d";
+      ctx.shadowBlur = 24;
+      ctx.shadowColor = "#ffd84d";
+      const radius = TILE * .43;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, radius, .18, Math.PI * 2 - .18);
+      ctx.closePath();
+      ctx.fill();
+      if (index % 3 === 0) {
+        const sparkleX = -TILE * (.48 + (index % 2) * .1);
+        const sparkleSize = TILE * (.07 + (index % 3) * .02) * (1 - age);
+        ctx.globalAlpha = alpha * .9;
+        ctx.fillStyle = "#fff3ae";
+        ctx.beginPath();
+        ctx.moveTo(sparkleX, -sparkleSize);
+        ctx.lineTo(sparkleX + sparkleSize, 0);
+        ctx.lineTo(sparkleX, sparkleSize);
+        ctx.lineTo(sparkleX - sparkleSize, 0);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+    });
   }
 
   function drawPlayer() {

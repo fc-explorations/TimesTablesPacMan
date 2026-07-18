@@ -26,4 +26,31 @@
     <path d="m3 7 4 4 5-7 5 7 4-4-2 11H5L3 7Z" />
     <path d="M5 21h14" />
   </symbol>
+  <symbol id="number-small" viewBox="0 0 24 24">
+    <path d="M7 4v16M17 4v16M4 8h16M4 16h16" />
+    <path d="M5 12h14" />
+  </symbol>
+  <symbol id="number-large" viewBox="0 0 24 24">
+    <path d="M5 19V9M12 19V5M19 19V3" />
+    <path d="M3 19h18" />
+  </symbol>
+  <symbol id="numbers" viewBox="0 0 24 24">
+    <circle cx="7" cy="7" r="2" />
+    <circle cx="17" cy="7" r="2" />
+    <circle cx="7" cy="17" r="2" />
+    <circle cx="17" cy="17" r="2" />
+  </symbol>
+  <symbol id="target" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8" />
+    <circle cx="12" cy="12" r="3" />
+    <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+  </symbol>
+  <symbol id="timer" viewBox="0 0 24 24">
+    <circle cx="12" cy="13" r="8" />
+    <path d="M9 2h6M12 5v2M12 13l4-2M19 6l1.5-1.5" />
+  </symbol>
+  <symbol id="motion" viewBox="0 0 24 24">
+    <path d="M4 8c2.5-3 5.5-3 8 0s5.5 3 8 0" />
+    <path d="M4 16c2.5-3 5.5-3 8 0s5.5 3 8 0" />
+  </symbol>
 </svg>

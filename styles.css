@@ -40,7 +40,7 @@ h2 { font-size: 1.05rem; }
 .button-primary { color: #171326; background: linear-gradient(135deg, #ffe36a, #ffc936); border-color: #ffe36a; box-shadow: 0 0 22px rgba(255, 216, 77, .32); }
 .button-secondary { background: #282545; }
 .wide { width: 100%; }
-.question-panel { align-self: start; min-height: 430px; padding: 26px 24px; border: 2px solid #542dd3; border-radius: 18px; background: radial-gradient(circle at 50% 0, rgba(69, 41, 159, .35), transparent 48%), linear-gradient(145deg, rgba(15, 13, 72, .98), rgba(7, 8, 42, .98)); box-shadow: 0 0 0 1px rgba(177, 93, 255, .16), 0 0 28px rgba(87, 39, 222, .32), var(--shadow); overflow: hidden; }
+.question-panel { position: relative; align-self: start; min-height: 430px; padding: 26px 24px; border: 2px solid #542dd3; border-radius: 18px; background: radial-gradient(circle at 50% 0, rgba(69, 41, 159, .35), transparent 48%), linear-gradient(145deg, rgba(15, 13, 72, .98), rgba(7, 8, 42, .98)); box-shadow: 0 0 0 1px rgba(177, 93, 255, .16), 0 0 28px rgba(87, 39, 222, .32), var(--shadow); overflow: hidden; }
 .mission-heading { display: flex; align-items: center; justify-content: center; gap: 12px; }
 .mission-star { color: #ffbe32; font-size: 1.15rem; text-shadow: 0 0 12px rgba(255, 190, 50, .8); }
 .question { margin-top: 28px; font-size: clamp(2.3rem, 4vw, 3.65rem); font-weight: 900; letter-spacing: -.075em; line-height: 1; text-align: center; white-space: nowrap; text-shadow: 0 0 26px rgba(248,247,255,.12); }
@@ -60,9 +60,11 @@ h2 { font-size: 1.05rem; }
 .question.answer-bad { color: var(--red); text-shadow: 0 0 18px rgba(255, 101, 119, .45); }
 .question.answer-reveal { color: #fff; text-shadow: 0 0 18px rgba(255, 255, 255, .45); }
 .countdown-wrap { display: grid; place-items: center; margin-top: 18px; }
-.countdown-ring { --progress: 100%; position: relative; display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; background: conic-gradient(var(--pink) var(--progress), rgba(255, 255, 255, .12) 0); }
+.question-panel.with-countdown .mission-heading { visibility: hidden; }
+.question-panel.with-countdown .countdown-wrap { position: absolute; inset-inline: 24px; top: 22px; margin-top: 0; }
+.countdown-ring { --progress: 100%; position: relative; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; background: conic-gradient(var(--pink) var(--progress), rgba(255, 255, 255, .12) 0); }
 .countdown-ring::before { position: absolute; inset: 5px; border-radius: 50%; background: #1d1b38; content: ""; }
-.countdown-ring span { position: relative; color: var(--ink); font-size: .95rem; font-weight: 850; }
+.countdown-ring span { position: relative; color: var(--ink); font-size: .85rem; font-weight: 850; }
 .game-layout { display: grid; grid-template-columns: minmax(300px, 360px) minmax(560px, 1fr) minmax(240px, 300px); align-items: start; justify-content: center; gap: 18px; }
 .settings-panel { border: 1px solid var(--line); border-radius: 18px; background: rgba(8, 10, 52, .9); }
 .score-panel { display: grid; gap: 12px; overflow: visible; background: transparent; }
@@ -73,7 +75,20 @@ h2 { font-size: 1.05rem; }
 .icon-gold { color: var(--yellow); filter: drop-shadow(0 0 7px rgba(255, 216, 77, .55)); }
 .icon-cyan { color: var(--cyan); filter: drop-shadow(0 0 7px rgba(39, 217, 255, .55)); }
 .board-wrap { min-width: 0; }
-.canvas-frame { position: relative; overflow: hidden; border: 0; border-radius: 0; background: #05050d; box-shadow: none; }
+.canvas-frame {
+  position: relative;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: 24px;
+  background: linear-gradient(#05050d, #05050d) padding-box,
+    linear-gradient(145deg, #ff9b3d 0%, #a936ff 15%, #5427e8 58%, #8e43ff 100%) border-box;
+  box-shadow: 0 0 0 1px rgba(255, 102, 242, .52),
+    0 0 0 5px rgba(43, 14, 104, .74),
+    0 0 18px rgba(137, 43, 255, .88),
+    0 0 38px rgba(74, 28, 220, .34),
+    inset 0 0 0 1px rgba(231, 125, 255, .7),
+    inset 0 0 20px rgba(91, 39, 255, .2);
+}
 canvas { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .pause-overlay { position: absolute; inset: 0; display: grid; place-content: center; gap: 8px; text-align: center; background: rgba(5,5,13,.82); font-size: 1.5rem; }
 .pause-overlay span { color: var(--muted); font-size: .85rem; }
@@ -94,10 +109,12 @@ canvas { display: block; width: 100%; height: auto; touch-action: none; user-sel
 .instructions-controls { padding-top: 13px; border-top: 1px solid var(--line); }
 .settings-heading { justify-content: space-between; margin-bottom: 16px; }
 .icon-button { width: 34px; height: 34px; color: var(--ink); background: transparent; font-size: 1.5rem; line-height: 1; }
-.settings-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.settings-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 label { display: grid; gap: 6px; color: var(--muted); font-size: .74rem; font-weight: 750; }
+.setting-label { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
+.setting-icon { width: 17px; height: 17px; flex: 0 0 17px; fill: none; stroke: var(--pink); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; filter: drop-shadow(0 0 5px rgba(255, 90, 157, .38)); }
 input[type="number"] { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: #0e0d1c; }
-.checkbox-label { display: flex; align-items: center; grid-template-columns: auto 1fr; margin-top: 17px; }
+.checkbox-label { display: flex; align-items: center; gap: 9px; margin-top: 17px; }
 .checkbox-label input { width: 17px; height: 17px; accent-color: var(--pink); }
 .settings-actions { justify-content: flex-end; margin-top: 18px; }
 .footer { justify-content: space-between; gap: 16px; margin-top: 20px; color: var(--muted); font-size: .74rem; }
@@ -129,6 +146,7 @@ input[type="number"] { width: 100%; padding: 10px; border: 1px solid var(--line)
   .settings-grid { grid-template-columns: 1fr 1fr; }
   .footer { align-items: flex-start; flex-direction: column; gap: 5px; }
   .question-panel { padding: 20px 15px; }
+  .question-panel.with-countdown .countdown-wrap { inset-inline: 15px; top: 16px; }
   .question { font-size: clamp(2rem, 10vw, 2.75rem); }
   .mission-copy { margin-top: 22px; padding-top: 18px; }
   .progress-card, .streak-card { padding: 15px; }
