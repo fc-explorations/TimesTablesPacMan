@@ -41,6 +41,7 @@
   const STORAGE_KEY = "times-table-pacman-settings";
 
   const settings = loadSettings();
+  const ghostHouse = { left: 10, right: 17, top: 12, bottom: 18 };
   let maze = createMaze();
   const spawn = { x: 13.5, y: 23.5 };
   const ghostHome = { x: 13.5, y: 15.5 };
@@ -152,7 +153,12 @@
       for (let x = 22; x < COLS; x++) grid[y][x] = ".";
     }
     // Reserve a central rectangular ghost house with a two-cell gate.
-    const penLeft = 10, penRight = 17, penTop = 12, penBottom = 18;
+    const { left: penLeft, right: penRight, top: penTop, bottom: penBottom } = ghostHouse;
+    // Keep a complete open-tile buffer around the house so the rectangle never
+    // visually touches a neighboring wall, including at its corners.
+    for (let y = penTop - 1; y <= penBottom + 1; y++) {
+      for (let x = penLeft - 1; x <= penRight + 1; x++) grid[y][x] = ".";
+    }
     for (let y = penTop; y <= penBottom; y++) for (let x = penLeft; x <= penRight; x++) grid[y][x] = ".";
     for (let x = penLeft; x <= penRight; x++) {
       grid[penTop][x] = "#";
@@ -182,8 +188,6 @@
       grid[penTop - 1][x] = ".";
       grid[penBottom + 1][x] = ".";
     }
-    grid[penBottom + 1][penRight - 1] = "#";
-    grid[penBottom + 1][penRight] = "#";
     // Keep separate wall sections from touching at diagonal corners.
     [[18, 11], [19, 11], [20, 17]].forEach(([x, y]) => { grid[y][x] = "."; });
     grid[14][0] = "."; grid[15][0] = ".";
@@ -199,7 +203,23 @@
     grid[1][13] = "."; grid[1][14] = ".";
     grid[ROWS - 2][13] = "."; grid[ROWS - 2][14] = ".";
     grid[ROWS - 1][13] = "."; grid[ROWS - 1][14] = ".";
-    return isMazeSolvable(grid) ? grid : createMaze();
+    return isMazeSolvable(grid) && isGhostHouseClear(grid) ? grid : createMaze();
+  }
+
+  function isGhostHouseClear(grid) {
+    const { left, right, top, bottom } = ghostHouse;
+    for (let y = top; y <= bottom; y++) for (let x = left; x <= right; x++) {
+      const isHousePerimeter = x === left || x === right || y === top || y === bottom;
+      if (!isHousePerimeter || grid[y][x] !== "#") continue;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if (!dx && !dy) continue;
+        const nx = x + dx;
+        const ny = y + dy;
+        if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS &&
+            !(nx >= left && nx <= right && ny >= top && ny <= bottom) && grid[ny][nx] === "#") return false;
+      }
+    }
+    return true;
   }
 
   function isMazeSolvable(grid) {
@@ -229,7 +249,7 @@
     const tiles = [];
     for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (maze[y][x] !== "#") tiles.push({ x, y });
     return tiles.filter((tile) => {
-      const inGhostHouse = tile.x >= 10 && tile.x <= 17 && tile.y >= 12 && tile.y <= 18;
+      const inGhostHouse = tile.x >= ghostHouse.left && tile.x <= ghostHouse.right && tile.y >= ghostHouse.top && tile.y <= ghostHouse.bottom;
       return !inGhostHouse && Math.hypot(tile.x + .5 - spawn.x, tile.y + .5 - spawn.y) > 4 && Math.hypot(tile.x + .5 - ghostHome.x, tile.y + .5 - ghostHome.y) > 2;
     });
   }
