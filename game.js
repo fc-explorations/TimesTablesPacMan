@@ -325,7 +325,14 @@
   }
 
   function regenerateMaze() {
-    maze = createMaze();
+    const previousSignature = maze.map((row) => row.join("")).join("|");
+    let nextMaze = createMaze();
+    let attempts = 0;
+    while (nextMaze.map((row) => row.join("")).join("|") === previousSignature && attempts < 8) {
+      nextMaze = createMaze();
+      attempts++;
+    }
+    maze = nextMaze;
     openTiles = getOpenTiles();
     Object.assign(player, makePlayer());
     ghosts.forEach((ghost) => Object.assign(ghost, makeGhost(ghost.name, ghost.color, ghost.homeX, ghost.homeY, "left", ghost.delay)));
