@@ -70,6 +70,7 @@
   };
 
   const GHOST_EXIT_TARGET = { x: 13.5, y: 21.5 };
+  const GHOST_RELEASE_INTERVAL = 1.6;
 
   const player = makePlayer();
   const ghosts = [
@@ -538,8 +539,16 @@
     game.hitStarted = game.elapsed;
     game.respawnAt = game.elapsed + .8;
     game.combo = 0;
+    resetGhostsAfterCapture();
     statusText.textContent = "A ghost caught you — hold on, you are respawning.";
     updateUI();
+  }
+
+  function resetGhostsAfterCapture() {
+    ghosts.forEach((ghost, index) => {
+      const direction = index === 0 ? "left" : index === 3 ? "down" : "up";
+      Object.assign(ghost, makeGhost(ghost.name, ghost.color, ghost.homeX, ghost.homeY, direction, index * GHOST_RELEASE_INTERVAL));
+    });
   }
 
   function respawnPlayer() {
