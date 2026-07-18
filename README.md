@@ -21,6 +21,12 @@ Correct answers advance the level after the configured correct-answer threshold.
 - **Level 1:** rotating blue orbs frighten ghosts and make them eatable.
 - **Level 2:** paired teleporters send Pac-Man to the other portal.
 - **Level 3:** a temporary super-strength star lets Pac-Man erase maze walls, including the wrapped boundary walls.
+- **Level 4:** Radar briefly shows a green glowing arrow pointing toward the correct number.
+- **Level 5:** Shield absorbs one ghost collision.
+- **Level 6:** Ghost Freeze stops the ghosts temporarily.
+- **Level 7:** Decoy Pac-Man creates a short-lived duplicate that distracts the ghosts.
+
+All non-portal power-ups disappear after they are consumed, including the blue orbs and super-strength star. Teleporters are the exception and can be used repeatedly.
 
 ## Controls
 

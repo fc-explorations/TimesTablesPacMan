@@ -64,9 +64,14 @@
     targets: [],
     powerPellets: powerPelletSpots.map((spot) => ({ ...spot, kind: "pellet", active: true })),
     teleporters: [],
+    powerUps: [],
     superPowerUp: null,
     superStrengthUntil: 0,
     teleportCooldownUntil: 0,
+    radarUntil: 0,
+    shieldActive: false,
+    ghostFreezeUntil: 0,
+    decoy: null,
     frightenedUntil: 0,
     hitStarted: 0,
     respawnAt: 0,
@@ -376,6 +381,7 @@
   function isPowerUpTile(tile) {
     if (powerPelletSpots.some((spot) => spot.x === tile.x && spot.y === tile.y)) return true;
     if (game.teleporters.some((spot) => spot.x === tile.x && spot.y === tile.y)) return true;
+    if (game.powerUps.some((spot) => spot.x === tile.x && spot.y === tile.y)) return true;
     if (game.superPowerUp && game.superPowerUp.x === tile.x && game.superPowerUp.y === tile.y) return true;
     return game.targets.some((target) => target.x === tile.x && target.y === tile.y);
   }
@@ -392,6 +398,7 @@
 
   function setupLevelPowerUps() {
     game.teleporters = [];
+    game.powerUps = [];
     game.superPowerUp = null;
     if (game.level >= 2) {
       const spots = chooseSpecialPositions(2, 10);
@@ -401,6 +408,14 @@
       const [spot] = chooseSpecialPositions(1, 6);
       if (spot) game.superPowerUp = { ...spot, active: true };
     }
+    const addPowerUp = (type) => {
+      const [spot] = chooseSpecialPositions(1, 6);
+      if (spot) game.powerUps.push({ ...spot, type, active: true });
+    };
+    if (game.level >= 4) addPowerUp("radar");
+    if (game.level >= 5) addPowerUp("shield");
+    if (game.level >= 6) addPowerUp("ghost-freeze");
+    if (game.level >= 7) addPowerUp("decoy");
   }
 
   function nextQuestion() {
@@ -425,6 +440,10 @@
     openTiles = getOpenTiles();
     game.superStrengthUntil = 0;
     game.teleportCooldownUntil = 0;
+    game.radarUntil = 0;
+    game.shieldActive = false;
+    game.ghostFreezeUntil = 0;
+    game.decoy = null;
     setupLevelPowerUps();
     Object.assign(player, makePlayer());
     ghosts.forEach((ghost) => Object.assign(ghost, makeGhost(ghost.name, ghost.color, ghost.homeX, ghost.homeY, "left", ghost.delay)));
@@ -481,6 +500,8 @@
     if (teleporter && game.elapsed >= game.teleportCooldownUntil) { activateTeleporter(teleporter); return; }
     const superPowerUp = game.superPowerUp;
     if (superPowerUp?.active && distance(player, { x: superPowerUp.x + .5, y: superPowerUp.y + .5 }) < .45) activateSuperStrength(superPowerUp);
+    const powerUp = game.powerUps.find((item) => item.active && distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
+    if (powerUp) activatePowerUp(powerUp);
   }
 
   function activateTeleporter(teleporter) {
@@ -497,6 +518,44 @@
     powerUp.active = false;
     game.superStrengthUntil = game.elapsed + 8;
     statusText.textContent = "Super strength! Walls can be broken for 8 seconds.";
+  }
+
+  function activatePowerUp(powerUp) {
+    powerUp.active = false;
+    if (powerUp.type === "radar") {
+      game.radarUntil = game.elapsed + 6;
+      statusText.textContent = "Radar active — follow the green arrow.";
+    } else if (powerUp.type === "shield") {
+      game.shieldActive = true;
+      statusText.textContent = "Shield active — one ghost collision is protected.";
+    } else if (powerUp.type === "ghost-freeze") {
+      game.ghostFreezeUntil = game.elapsed + 5;
+      statusText.textContent = "Ghost Freeze active for 5 seconds.";
+    } else if (powerUp.type === "decoy") {
+      game.decoy = { x: player.x, y: player.y, dir: player.dir, speed: player.speed * .8, until: game.elapsed + 7, mouth: 0 };
+      statusText.textContent = "Decoy Pac-Man is distracting the ghosts.";
+    }
+  }
+
+  function updateDecoy(dt) {
+    if (!game.decoy) return;
+    if (game.elapsed >= game.decoy.until) { game.decoy = null; return; }
+    const decoy = game.decoy;
+    if (tileCenter(decoy)) {
+      decoy.x = Math.floor(decoy.x) + .5;
+      decoy.y = Math.floor(decoy.y) + .5;
+      const options = ["left", "right", "up", "down"].filter((direction) => isOpen(decoy.x + DIRECTIONS[direction].x, decoy.y + DIRECTIONS[direction].y) && direction !== OPPOSITE[decoy.dir]);
+      if (!isOpen(decoy.x + DIRECTIONS[decoy.dir].x, decoy.y + DIRECTIONS[decoy.dir].y) && options.length) decoy.dir = options[randomInt(0, options.length - 1)];
+      else if (options.length && Math.random() < .25) decoy.dir = options[randomInt(0, options.length - 1)];
+    }
+    const direction = DIRECTIONS[decoy.dir];
+    decoy.x += direction.x * decoy.speed * dt;
+    decoy.y += direction.y * decoy.speed * dt;
+    if (decoy.x < 0) decoy.x = COLS;
+    if (decoy.x > COLS) decoy.x = 0;
+    if (decoy.y < 0) decoy.y = ROWS;
+    if (decoy.y > ROWS) decoy.y = 0;
+    decoy.mouth += dt * 12;
   }
 
   function speedMultiplier() { return clamp(Number(settings.gameSpeed) || 1, .5, 2); }
@@ -551,17 +610,18 @@
     addScore(50);
     statusText.textContent = "Power pellet! Ghosts are frightened for 7 seconds.";
     updateUI();
-    window.setTimeout(() => { pellet.active = true; }, 7000);
   }
 
   function updateGhosts(dt) {
     const frightened = game.elapsed < game.frightenedUntil;
+    const frozen = game.elapsed < game.ghostFreezeUntil;
     if (!frightened) {
       game.modeElapsed += dt;
       const cycle = game.modeElapsed % 54;
       game.mode = cycle < 7 || (cycle >= 27 && cycle < 34) ? "scatter" : "chase";
     }
     ghosts.forEach((ghost, index) => {
+      if (frozen) { ghost.state = "frozen"; return; }
       if (ghost.phase > 0) { ghost.phase -= dt; return; }
       ghost.state = ghost.eaten ? "eyes" : ghost.releasing ? "exit" : frightened ? "frightened" : game.mode;
       const speed = ghost.state === "frightened" ? 2.1 * speedMultiplier() : ghost.state === "eyes" ? 6 * speedMultiplier() : ghost.speed;
@@ -610,15 +670,16 @@
     if (ghost.state === "eyes") return ghostHome;
     if (ghost.releasing) return GHOST_EXIT_TARGET;
     if (ghost.state === "scatter") return scatterCorners[index];
-    if (ghost.name === "Blinky") return { ...player };
-    const direction = DIRECTIONS[player.dir];
-    if (ghost.name === "Pinky") return { x: player.x + direction.x * 4, y: player.y + direction.y * 4 };
+    const targetPlayer = game.decoy || player;
+    if (ghost.name === "Blinky") return { ...targetPlayer };
+    const direction = DIRECTIONS[targetPlayer.dir];
+    if (ghost.name === "Pinky") return { x: targetPlayer.x + direction.x * 4, y: targetPlayer.y + direction.y * 4 };
     if (ghost.name === "Inky") {
-      const ahead = { x: player.x + direction.x * 2, y: player.y + direction.y * 2 };
+      const ahead = { x: targetPlayer.x + direction.x * 2, y: targetPlayer.y + direction.y * 2 };
       const blinky = ghosts[0];
       return { x: ahead.x + (ahead.x - blinky.x), y: ahead.y + (ahead.y - blinky.y) };
     }
-    return distance(ghost, player) > 8 ? { ...player } : scatterCorners[index];
+    return distance(ghost, targetPlayer) > 8 ? { ...targetPlayer } : scatterCorners[index];
   }
 
   function handleGhostCollision(ghost) {
@@ -629,7 +690,13 @@
       return;
     }
     if (ghost.state === "eyes") return;
+    if (ghost.state === "frozen") return;
     if (game.respawnAt > game.elapsed) return;
+    if (game.shieldActive) {
+      game.shieldActive = false;
+      statusText.textContent = "Shield absorbed the ghost collision.";
+      return;
+    }
     game.hitStarted = game.elapsed;
     game.respawnAt = game.elapsed + .8;
     game.combo = 0;
@@ -659,6 +726,7 @@
     if (game.paused) return;
     game.elapsed += dt;
     updatePlayer(dt);
+    updateDecoy(dt);
     updateGhosts(dt);
     if (game.feedback && game.elapsed >= game.feedback.until) game.feedback = null;
     updateUI();
@@ -675,8 +743,11 @@
     drawPowerPellets();
     drawTeleporters();
     drawSuperPowerUp();
+    drawPowerUps();
     drawTargets();
     drawPlayer();
+    drawDecoy();
+    drawRadarArrow();
     ghosts.forEach(drawGhost);
   }
 
@@ -793,6 +864,82 @@
     ctx.restore();
   }
 
+  function drawPowerUps() {
+    game.powerUps.forEach((powerUp, index) => {
+      if (!powerUp.active) return;
+      const x = (powerUp.x + .5) * TILE;
+      const y = (powerUp.y + .5) * TILE;
+      const rotation = settings.reducedMotion ? 0 : game.elapsed * 1.5 + index;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+      ctx.shadowBlur = 15;
+      ctx.lineWidth = 2;
+      if (powerUp.type === "radar") {
+        ctx.strokeStyle = "#5dff9b";
+        ctx.shadowColor = "#5dff9b";
+        ctx.beginPath(); ctx.moveTo(0, -7); ctx.lineTo(7, 0); ctx.lineTo(0, 7); ctx.lineTo(-7, 0); ctx.closePath(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-2, 0); ctx.lineTo(4, 0); ctx.lineTo(2, -2); ctx.moveTo(4, 0); ctx.lineTo(2, 2); ctx.stroke();
+      } else if (powerUp.type === "shield") {
+        ctx.strokeStyle = "#73e4ff";
+        ctx.shadowColor = "#73e4ff";
+        ctx.beginPath(); ctx.arc(0, 0, 7, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(0, 4); ctx.moveTo(-4, 0); ctx.lineTo(4, 0); ctx.stroke();
+      } else if (powerUp.type === "ghost-freeze") {
+        ctx.strokeStyle = "#b9efff";
+        ctx.shadowColor = "#b9efff";
+        for (let ray = 0; ray < 3; ray++) { ctx.rotate(Math.PI / 3); ctx.beginPath(); ctx.moveTo(-7, 0); ctx.lineTo(7, 0); ctx.stroke(); }
+      } else if (powerUp.type === "decoy") {
+        ctx.fillStyle = "#a8d9ff";
+        ctx.shadowColor = "#a8d9ff";
+        ctx.beginPath(); ctx.arc(0, 0, 6, Math.PI * .2, Math.PI * 1.8); ctx.lineTo(0, 0); ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+    });
+  }
+
+  function drawDecoy() {
+    if (!game.decoy) return;
+    const decoy = game.decoy;
+    const x = decoy.x * TILE;
+    const y = decoy.y * TILE;
+    const mouth = settings.reducedMotion ? .16 : Math.abs(Math.sin(decoy.mouth)) * .25;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.globalAlpha = .62;
+    ctx.fillStyle = "#a8d9ff";
+    ctx.shadowBlur = 14;
+    ctx.shadowColor = "#a8d9ff";
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, TILE * .38, DIRECTIONS[decoy.dir].angle + mouth, DIRECTIONS[decoy.dir].angle - mouth + Math.PI * 2); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function wrappedDifference(from, to, size) {
+    let difference = to - from;
+    if (difference > size / 2) difference -= size;
+    if (difference < -size / 2) difference += size;
+    return difference;
+  }
+
+  function drawRadarArrow() {
+    if (game.elapsed >= game.radarUntil) return;
+    const target = game.targets.find((item) => item.correct);
+    if (!target) return;
+    const dx = wrappedDifference(player.x, target.x + .5, COLS);
+    const dy = wrappedDifference(player.y, target.y + .5, ROWS);
+    ctx.save();
+    ctx.translate(player.x * TILE, player.y * TILE - 14);
+    ctx.rotate(Math.atan2(dy, dx));
+    ctx.strokeStyle = "#5dff9b";
+    ctx.fillStyle = "#5dff9b";
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = "#5dff9b";
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-7, 0); ctx.lineTo(9, 0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(3, -4); ctx.lineTo(3, 4); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
   function drawPlayer() {
     const hitAnimating = game.respawnAt > game.elapsed;
     const hitTime = hitAnimating ? game.elapsed - game.hitStarted : 0;
@@ -807,14 +954,23 @@
     ctx.fillStyle = superStrength ? "#ff72d2" : "#ffd84d";
     ctx.shadowBlur = superStrength ? 18 : 12;
     ctx.shadowColor = superStrength ? "#ff72d2" : "#ffd84d";
-    ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, radius, DIRECTIONS[player.dir].angle + mouth, DIRECTIONS[player.dir].angle - mouth + Math.PI * 2); ctx.closePath(); ctx.fill(); ctx.restore();
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, radius, DIRECTIONS[player.dir].angle + mouth, DIRECTIONS[player.dir].angle - mouth + Math.PI * 2); ctx.closePath(); ctx.fill();
+    if (game.shieldActive) {
+      ctx.strokeStyle = "#73e4ff";
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = "#73e4ff";
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(0, 0, radius + 4, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
   }
 
   function drawGhost(ghost) {
     if (ghost.phase > 0) return;
     const x = ghost.x * TILE, y = ghost.y * TILE, r = TILE * .4;
     ctx.save();
-    if (ghost.state === "frightened") ctx.fillStyle = game.frightenedUntil - game.elapsed < 2 && !settings.reducedMotion ? (Math.floor(game.elapsed * 8) % 2 ? "#f7f4ff" : "#3158db") : "#3158db";
+    if (ghost.state === "frozen") ctx.fillStyle = "#a9e8ff";
+    else if (ghost.state === "frightened") ctx.fillStyle = game.frightenedUntil - game.elapsed < 2 && !settings.reducedMotion ? (Math.floor(game.elapsed * 8) % 2 ? "#f7f4ff" : "#3158db") : "#3158db";
     else if (ghost.state === "eyes") ctx.fillStyle = "#4b52db";
     else ctx.fillStyle = ghost.color;
     ctx.beginPath(); ctx.arc(x, y - 2, r, Math.PI, 0); ctx.lineTo(x + r, y + r); ctx.lineTo(x + r * .5, y + r * .65); ctx.lineTo(x, y + r); ctx.lineTo(x - r * .5, y + r * .65); ctx.lineTo(x - r, y + r); ctx.closePath(); ctx.fill();

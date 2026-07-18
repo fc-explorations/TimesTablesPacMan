@@ -22,6 +22,11 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Level 1 includes rotating blue orbs that trigger frightened-ghost mode.
 - Level 2 unlocks paired teleporters that send Pac-Man to the other portal.
 - Level 3 unlocks a temporary super-strength star that lets Pac-Man erase wall blocks, including wrapped boundary blocks.
+- Level 4 unlocks Radar, which briefly points toward the correct answer with a green glowing arrow.
+- Level 5 unlocks Shield, which absorbs one ghost collision before being consumed.
+- Level 6 unlocks Ghost Freeze, which temporarily stops the ghosts.
+- Level 7 unlocks Decoy Pac-Man, which sends a short-lived duplicate along the maze to distract ghosts.
+- All non-portal power-ups, including orbs and the super-strength star, are consumed when activated; paired teleporters remain reusable.
 - Levels advance after a configurable number of correct answers; wrong answers and penalties never reduce the current level.
 - Ghost collisions reset Pac-Man and combo, but endless practice continues.
 - After a normal ghost collision, Pac-Man jiggles briefly before respawning at the start tile.
