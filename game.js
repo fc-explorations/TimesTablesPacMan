@@ -375,18 +375,21 @@
   }
 
   function drawTargets() {
-    game.targets.forEach((target) => {
-      const x = (target.x + .5) * TILE, y = (target.y + .5) * TILE;
+    game.targets.forEach((target, index) => {
+      const x = (target.x + .5) * TILE;
+      const y = (target.y + .5) * TILE;
       const state = target.state;
+      const floatOffset = settings.reducedMotion ? 0 : Math.sin(game.elapsed * 2.4 + index * 1.7) * 2.2;
+      const tilt = settings.reducedMotion ? 0 : Math.sin(game.elapsed * 1.8 + index) * .045;
       ctx.save();
+      ctx.translate(x, y + floatOffset);
+      ctx.rotate(tilt);
       if (state === "correct") { ctx.shadowBlur = 20; ctx.shadowColor = "#48e49a"; ctx.fillStyle = "#48e49a"; }
       else if (state === "wrong") { ctx.shadowBlur = 20; ctx.shadowColor = "#ff6577"; ctx.fillStyle = "#ff6577"; }
-      else { ctx.fillStyle = "#ffd84d"; }
-      ctx.beginPath(); ctx.arc(x, y, TILE * .42, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#121225";
-      ctx.font = `900 ${target.value >= 100 ? 10 : 13}px system-ui`;
+      else { ctx.shadowBlur = 12; ctx.shadowColor = "#ffd84d"; ctx.fillStyle = "#ffd84d"; }
+      ctx.font = `900 ${target.value >= 100 ? 11 : 15}px system-ui`;
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText(String(target.value), x, y + .5);
+      ctx.fillText(String(target.value), 0, 0);
       ctx.restore();
     });
   }

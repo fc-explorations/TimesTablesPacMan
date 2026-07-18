@@ -10,6 +10,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 
 - Questions use configurable factors and alternate between `A × B = ?` and `A × ? = C`.
 - Each question places one correct answer and nearby distractors on walkable maze tiles.
+- Number targets are floating yellow labels without surrounding circles; feedback changes their glow color.
 - Number targets activate immediately when Pac-Man runs over them.
 - A correct answer glows green, increases score and combo, and causes a new question and target layout.
 - A wrong answer glows red, briefly reveals the correct answer in white, reduces score and resets combo, and then causes a new question and target layout.
