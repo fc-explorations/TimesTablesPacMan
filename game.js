@@ -203,10 +203,10 @@
     grid[1][13] = "."; grid[1][14] = ".";
     grid[ROWS - 2][13] = "."; grid[ROWS - 2][14] = ".";
     grid[ROWS - 1][13] = "."; grid[ROWS - 1][14] = ".";
-    if (isMazeSolvable(grid) && isGhostHouseClear(grid)) return grid;
+    if (isMazeSolvable(grid) && isGhostHouseClear(grid) && isWallCornerClear(grid)) return grid;
     // Never let a rare run of invalid random layouts freeze the whole game.
     // The fixed fallback seed produces a known valid layout from this blueprint.
-    if (attempt >= 80) return createMaze(() => .42, 0);
+    if (attempt >= 80) return createMaze(() => .7, 0);
     return createMaze(randomSource, attempt + 1);
   }
 
@@ -222,6 +222,19 @@
         if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS &&
             !(nx >= left && nx <= right && ny >= top && ny <= bottom) && grid[ny][nx] === "#") return false;
       }
+    }
+    return true;
+  }
+
+  function isWallCornerClear(grid) {
+    for (let y = 0; y < ROWS - 1; y++) for (let x = 0; x < COLS - 1; x++) {
+      const topLeft = grid[y][x] === "#";
+      const topRight = grid[y][x + 1] === "#";
+      const bottomLeft = grid[y + 1][x] === "#";
+      const bottomRight = grid[y + 1][x + 1] === "#";
+      const diagonalTouch = (topLeft && bottomRight && !topRight && !bottomLeft) ||
+        (topRight && bottomLeft && !topLeft && !bottomRight);
+      if (diagonalTouch) return false;
     }
     return true;
   }
