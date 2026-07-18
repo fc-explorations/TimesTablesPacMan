@@ -430,7 +430,7 @@
       game.combo += 1;
       questionText.textContent = completedEquation(game.question, target.value);
       questionText.className = "question answer-good";
-      game.feedback = { type: "good", until: game.elapsed + settings.feedbackDuration, question: game.question };
+      game.feedback = { type: "good", until: game.elapsed + settings.feedbackDuration, started: game.elapsed, question: game.question };
       statusText.textContent = "Correct!";
     } else {
       target.state = "wrong";
@@ -438,7 +438,7 @@
       game.combo = 0;
       questionText.textContent = completedEquation(game.question, target.value);
       questionText.className = "question answer-bad";
-      game.feedback = { type: "bad", until: game.elapsed + settings.feedbackDuration, question: game.question };
+      game.feedback = { type: "bad", until: game.elapsed + settings.feedbackDuration, started: game.elapsed, question: game.question };
       statusText.textContent = "Try the next one.";
       window.setTimeout(() => {
         if (game.feedback?.question !== game.question || game.feedback.type !== "bad") return;
@@ -605,14 +605,15 @@
       const floatOffset = settings.reducedMotion ? 0 : Math.sin(game.elapsed * 2.4 + index * 1.7) * 2.2;
       const tilt = settings.reducedMotion ? 0 : Math.sin(game.elapsed * 1.8 + index) * .045;
       const blinking = game.feedback && state === "normal" && !settings.reducedMotion;
-      const blinkOn = !blinking || Math.sin(game.elapsed * Math.PI * 2.4) > 0;
+      const fadeProgress = blinking ? (game.elapsed - game.feedback.started) % 2 : 0;
+      const feedbackAlpha = blinking ? (1 + Math.cos(Math.PI * fadeProgress)) / 2 : 1;
       ctx.save();
       ctx.translate(x, y + floatOffset);
       ctx.rotate(tilt);
-      if (blinking) ctx.globalAlpha = blinkOn ? 1 : 0;
+      if (blinking) ctx.globalAlpha = feedbackAlpha;
       if (state === "correct") { ctx.shadowBlur = 20; ctx.shadowColor = "#48e49a"; ctx.fillStyle = "#48e49a"; }
       else if (state === "wrong") { ctx.shadowBlur = 20; ctx.shadowColor = "#ff6577"; ctx.fillStyle = "#ff6577"; }
-      else if (game.feedback) { ctx.shadowBlur = blinkOn ? 12 : 0; ctx.shadowColor = "#fff"; ctx.fillStyle = "#fff"; }
+      else if (game.feedback) { ctx.shadowBlur = 12 * feedbackAlpha; ctx.shadowColor = "#fff"; ctx.fillStyle = "#fff"; }
     else { ctx.shadowBlur = 12; ctx.shadowColor = "#ffad4d"; ctx.fillStyle = "#ffad4d"; }
       ctx.font = `900 ${target.value >= 100 ? 11 : 15}px system-ui`;
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
