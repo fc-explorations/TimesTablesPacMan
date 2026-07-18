@@ -60,6 +60,7 @@
     paused: false,
     started: false,
     feedback: null,
+    targetReveal: null,
     question: null,
     targets: [],
     powerPellets: powerPelletSpots.map((spot) => ({ ...spot, kind: "pellet", active: true })),
@@ -430,6 +431,7 @@
     questionText.textContent = game.question.text;
     questionText.className = "question";
     game.feedback = null;
+    game.targetReveal = { started: game.elapsed, until: game.elapsed + settings.feedbackDuration };
     questionCountdown.hidden = true;
     questionPanel.classList.remove("with-countdown");
     updateUI();
@@ -629,6 +631,7 @@
   }
 
   function evaluateTarget(target) {
+    game.targetReveal = null;
     if (target.correct) {
       target.state = "correct";
       addScore(100 + game.combo * 25);
@@ -792,6 +795,7 @@
     updateDecoy(dt);
     updateGhosts(dt);
     if (game.feedback && game.elapsed >= game.feedback.until) game.feedback = null;
+    if (game.targetReveal && game.elapsed >= game.targetReveal.until) game.targetReveal = null;
     updateUI();
   }
 
@@ -833,20 +837,22 @@
       const state = target.state;
       const floatOffset = settings.reducedMotion ? 0 : Math.sin(game.elapsed * 2.4 + index * 1.7) * 2.2;
       const tilt = settings.reducedMotion ? 0 : Math.sin(game.elapsed * 1.8 + index) * .045;
-      const blinking = game.feedback && state === "normal" && !settings.reducedMotion;
-      const fadeProgress = blinking ? (game.elapsed - game.feedback.started) % 2 : 0;
-      const feedbackAlpha = blinking ? (1 + Math.cos(Math.PI * fadeProgress)) / 2 : 1;
-      const feedbackBrightness = Math.round(255 * feedbackAlpha);
+      const feedbackProgress = game.feedback && !settings.reducedMotion ? clamp((game.elapsed - game.feedback.started) / settings.feedbackDuration, 0, 1) : game.feedback ? 1 : 0;
+      const revealProgress = game.targetReveal && !settings.reducedMotion ? clamp((game.elapsed - game.targetReveal.started) / settings.feedbackDuration, 0, 1) : game.targetReveal ? 1 : 0;
+      const targetAlpha = game.feedback ? 1 - feedbackProgress : game.targetReveal ? revealProgress : 1;
       ctx.save();
       ctx.translate(x, y + floatOffset);
       ctx.rotate(tilt);
       if (state === "correct") { ctx.shadowBlur = 20; ctx.shadowColor = "#48e49a"; ctx.fillStyle = "#48e49a"; }
       else if (state === "wrong") { ctx.shadowBlur = 20; ctx.shadowColor = "#ff6577"; ctx.fillStyle = "#ff6577"; }
-      else if (game.feedback) {
-        const feedbackColor = `rgb(${feedbackBrightness} ${feedbackBrightness} ${feedbackBrightness})`;
-        ctx.shadowBlur = 12 * feedbackAlpha;
-        ctx.shadowColor = feedbackColor;
-        ctx.fillStyle = feedbackColor;
+      else if (game.feedback || game.targetReveal) {
+        const red = Math.round(255 * targetAlpha);
+        const green = Math.round(173 * targetAlpha);
+        const blue = Math.round(77 * targetAlpha);
+        const targetColor = `rgb(${red} ${green} ${blue})`;
+        ctx.shadowBlur = 12 * targetAlpha;
+        ctx.shadowColor = targetColor;
+        ctx.fillStyle = targetColor;
       }
     else { ctx.shadowBlur = 12; ctx.shadowColor = "#ffad4d"; ctx.fillStyle = "#ffad4d"; }
       ctx.font = `900 ${target.value >= 100 ? 11 : 15}px system-ui`;
