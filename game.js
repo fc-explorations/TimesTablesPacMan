@@ -61,6 +61,7 @@
     started: false,
     feedback: null,
     targetReveal: null,
+    mazeTransition: null,
     question: null,
     targets: [],
     powerPellets: powerPelletSpots.map((spot) => ({ ...spot, kind: "pellet", active: true })),
@@ -445,6 +446,9 @@
       nextMaze = createMaze();
     } while (mazeSignature(nextMaze) === previousSignature);
     maze = nextMaze;
+    if (game.mazeTransition?.phase === "out") {
+      game.mazeTransition = { phase: "in", started: game.elapsed, until: game.elapsed + settings.feedbackDuration };
+    }
     openTiles = getOpenTiles();
     game.superStrengthUntil = 0;
     game.teleportCooldownUntil = 0;
@@ -626,6 +630,7 @@
     if (game.correctAnswers < answersPerLevel) return false;
     game.correctAnswers = 0;
     game.level += 1;
+    game.mazeTransition = { phase: "out", started: game.elapsed, until: game.elapsed + settings.feedbackDuration };
     setupLevelPowerUps();
     return true;
   }
@@ -796,6 +801,7 @@
     updateGhosts(dt);
     if (game.feedback && game.elapsed >= game.feedback.until) game.feedback = null;
     if (game.targetReveal && game.elapsed >= game.targetReveal.until) game.targetReveal = null;
+    if (game.mazeTransition?.phase === "in" && game.elapsed >= game.mazeTransition.until) game.mazeTransition = null;
     updateUI();
   }
 
@@ -819,6 +825,13 @@
   }
 
   function drawMaze() {
+    let mazeAlpha = 1;
+    if (game.mazeTransition) {
+      const progress = settings.reducedMotion ? 1 : clamp((game.elapsed - game.mazeTransition.started) / (game.mazeTransition.until - game.mazeTransition.started), 0, 1);
+      mazeAlpha = game.mazeTransition.phase === "out" ? 1 - progress : progress;
+    }
+    ctx.save();
+    ctx.globalAlpha = mazeAlpha;
     const wallInset = 1;
     ctx.fillStyle = "#161448";
     for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (maze[y][x] === "#") ctx.fillRect(x * TILE + wallInset, y * TILE + wallInset, TILE - wallInset * 2, TILE - wallInset * 2);
@@ -828,6 +841,7 @@
       if (isOpen(x + 1, y)) { ctx.beginPath(); ctx.moveTo(px + TILE - wallInset, py + wallInset); ctx.lineTo(px + TILE - wallInset, py + TILE - wallInset); ctx.stroke(); }
       if (isOpen(x, y + 1)) { ctx.beginPath(); ctx.moveTo(px + wallInset, py + TILE - wallInset); ctx.lineTo(px + TILE - wallInset, py + TILE - wallInset); ctx.stroke(); }
     }
+    ctx.restore();
   }
 
   function drawTargets() {

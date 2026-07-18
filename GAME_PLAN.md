@@ -17,6 +17,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Number targets are floating orange labels without surrounding circles; feedback changes their glow color.
 - Number targets activate immediately when Pac-Man runs over them.
 - A correct completed equation turns green, increases score and combo, and causes a new question and target layout.
+- When a correct answer advances the level, the current maze fades to black during feedback and the regenerated level maze fades from black to its wall colors over the same duration.
 - A wrong completed equation turns red, then the corrected equation appears in white, reduces score and resets combo, and then causes a new question and target layout.
 - During answer feedback, the non-selected maze numbers fade from orange to black over the configured feedback duration while the selected result remains red or green. The next question's numbers then fade from black back to orange over the same duration.
 - Normal dots are removed.
