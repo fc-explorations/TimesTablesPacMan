@@ -38,11 +38,11 @@
 
   const settings = loadSettings();
   const maze = createMaze();
-  const openTiles = getOpenTiles();
   const spawn = { x: 13.5, y: 23.5 };
   const ghostHome = { x: 13.5, y: 15.5 };
   const scatterCorners = [{ x: 1, y: 1 }, { x: 26, y: 1 }, { x: 1, y: 29 }, { x: 26, y: 29 }];
   const powerPelletSpots = [{ x: 1, y: 3 }, { x: 26, y: 3 }, { x: 1, y: 27 }, { x: 26, y: 27 }];
+  const openTiles = getOpenTiles();
 
   const game = {
     score: 0,
