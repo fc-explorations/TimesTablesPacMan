@@ -572,8 +572,14 @@
     if (tileCenter(decoy)) {
       decoy.x = Math.floor(decoy.x) + .5;
       decoy.y = Math.floor(decoy.y) + .5;
-      const options = ["left", "right", "up", "down"].filter((direction) => isOpen(decoy.x + DIRECTIONS[direction].x, decoy.y + DIRECTIONS[direction].y) && direction !== OPPOSITE[decoy.dir]);
-      if (!isOpen(decoy.x + DIRECTIONS[decoy.dir].x, decoy.y + DIRECTIONS[decoy.dir].y) && options.length) decoy.dir = options[randomInt(0, options.length - 1)];
+      const tile = centerTile(decoy);
+      const isDirectionOpen = (direction) => {
+        const delta = DIRECTIONS[direction];
+        return isOpen(tile.x + delta.x, tile.y + delta.y);
+      };
+      const options = ["left", "right", "up", "down"].filter((direction) => isDirectionOpen(direction) && direction !== OPPOSITE[decoy.dir]);
+      if (!options.length && isDirectionOpen(OPPOSITE[decoy.dir])) options.push(OPPOSITE[decoy.dir]);
+      if (!isDirectionOpen(decoy.dir) && options.length) decoy.dir = options[randomInt(0, options.length - 1)];
       else if (options.length && Math.random() < .25) decoy.dir = options[randomInt(0, options.length - 1)];
     }
     const direction = DIRECTIONS[decoy.dir];
