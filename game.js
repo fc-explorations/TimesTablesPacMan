@@ -74,6 +74,7 @@
     decoy: null,
     timeWarpUntil: 0,
     secondChanceActive: false,
+    collisionGraceUntil: 0,
     frightenedUntil: 0,
     hitStarted: 0,
     respawnAt: 0,
@@ -451,6 +452,7 @@
     game.decoy = null;
     game.timeWarpUntil = 0;
     game.secondChanceActive = false;
+    game.collisionGraceUntil = 0;
     setupLevelPowerUps();
     restorePlayerAfterMaze(previousPlayer);
     ghosts.forEach((ghost) => Object.assign(ghost, makeGhost(ghost.name, ghost.color, ghost.homeX, ghost.homeY, "left", ghost.delay)));
@@ -751,8 +753,10 @@
     if (ghost.state === "eyes") return;
     if (ghost.state === "frozen") return;
     if (game.respawnAt > game.elapsed) return;
+    if (game.elapsed < game.collisionGraceUntil) return;
     if (game.shieldActive) {
       game.shieldActive = false;
+      game.collisionGraceUntil = game.elapsed + .8;
       statusText.textContent = "Shield absorbed the ghost collision.";
       return;
     }
