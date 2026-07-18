@@ -129,10 +129,45 @@
       for (let x = 0; x < 6; x++) grid[y][x] = ".";
       for (let x = 22; x < COLS; x++) grid[y][x] = ".";
     }
+    // Reserve a central rectangular ghost house with a two-cell gate.
+    const penLeft = 10, penRight = 17, penTop = 12, penBottom = 18;
+    for (let y = penTop; y <= penBottom; y++) for (let x = penLeft; x <= penRight; x++) grid[y][x] = ".";
+    for (let x = penLeft; x <= penRight; x++) {
+      grid[penTop][x] = "#";
+      grid[penBottom][x] = "#";
+    }
+    for (let y = penTop; y <= penBottom; y++) {
+      grid[y][penLeft] = "#";
+      grid[y][penRight] = "#";
+    }
+    grid[penBottom][13] = ".";
+    grid[penBottom][14] = ".";
+    // The top/bottom toroidal route uses the two middle columns and detours
+    // around the ghost house while its central rectangle stays reserved.
+    for (let y = 0; y < penTop; y++) {
+      grid[y][13] = ".";
+      grid[y][14] = ".";
+    }
+    for (let y = penBottom + 1; y < ROWS; y++) {
+      grid[y][13] = ".";
+      grid[y][14] = ".";
+    }
+    for (let y = penTop; y <= penBottom; y++) {
+      grid[y][8] = ".";
+      grid[y][9] = ".";
+    }
+    for (let x = 8; x <= 14; x++) {
+      grid[penTop - 1][x] = ".";
+      grid[penBottom + 1][x] = ".";
+    }
+    grid[penBottom + 1][penRight - 1] = "#";
+    grid[penBottom + 1][penRight] = "#";
     grid[14][0] = "."; grid[15][0] = ".";
     grid[14][COLS - 1] = "."; grid[15][COLS - 1] = ".";
     grid[0].fill("#");
     grid[ROWS - 1].fill("#");
+    grid[0][13] = "."; grid[0][14] = ".";
+    grid[ROWS - 1][13] = "."; grid[ROWS - 1][14] = ".";
     return grid;
   }
 
@@ -151,9 +186,9 @@
   }
 
   function isOpen(x, y) {
-    if (y < 0 || y >= ROWS) return false;
     const wrappedX = (x + COLS) % COLS;
-    return maze[y][wrappedX] !== "#";
+    const wrappedY = (y + ROWS) % ROWS;
+    return maze[wrappedY][wrappedX] !== "#";
   }
 
   function tileCenter(entity) {
@@ -238,6 +273,8 @@
     player.y += d.y * player.speed * dt;
     if (player.x < 0) player.x = COLS;
     if (player.x > COLS) player.x = 0;
+    if (player.y < 0) player.y = ROWS;
+    if (player.y > ROWS) player.y = 0;
     player.mouth += dt * 12;
     checkPlayerTargets();
   }
@@ -327,6 +364,8 @@
       ghost.y = destination.y;
       if (ghost.x < 0) ghost.x = COLS - .5;
       if (ghost.x >= COLS) ghost.x = .5;
+      if (ghost.y < 0) ghost.y = ROWS - .5;
+      if (ghost.y >= ROWS) ghost.y = .5;
       ghost.destination = null;
     } else {
       ghost.x += d.x * step;
