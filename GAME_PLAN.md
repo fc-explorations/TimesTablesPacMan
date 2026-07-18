@@ -20,6 +20,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - When a correct answer advances the level, only walls removed from the old maze fade to black during feedback; walls present in both layouts stay solid. New walls and all power-up pickups in the regenerated level maze fade from black to their colors over the same duration.
 - A wrong completed equation turns red, then the corrected equation appears in white, reduces score and resets combo, and then causes a new question and target layout.
 - During answer feedback, the non-selected maze numbers fade from orange to black over the configured feedback duration while the selected result remains red or green. The next question's numbers then fade from black back to orange over the same duration.
+- Collectibles in each regenerated maze appear one at a time in a shared reveal sequence, with 2.5 seconds between appearances and a short fade-in; a pickup cannot activate before it appears.
 - Normal dots are removed.
 - Level 1 includes rotating blue orbs that trigger frightened-ghost mode.
 - Level 2 unlocks paired teleporters that send Pac-Man to the other portal.

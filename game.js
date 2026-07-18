@@ -52,7 +52,9 @@
   const spawn = { x: 13.5, y: 23.5 };
   const ghostHome = { x: 13.5, y: 15.5 };
   const scatterCorners = [{ x: 2, y: 2 }, { x: 25, y: 2 }, { x: 2, y: 27 }, { x: 25, y: 27 }];
-  const powerPelletSpots = [{ x: 2, y: 3 }, { x: 25, y: 3 }, { x: 2, y: 27 }, { x: 25, y: 27 }];
+  const powerPelletSpots = [{ x: 2, y: 2 }, { x: 25, y: 2 }, { x: 2, y: 27 }, { x: 25, y: 27 }];
+  const POWER_UP_STAGGER = 2.5;
+  const POWER_UP_FADE_DURATION = .65;
   let openTiles = getOpenTiles();
 
   const game = {
@@ -87,6 +89,7 @@
     frightenedUntil: 0,
     hitStarted: 0,
     respawnAt: 0,
+    powerUpRevealSequence: 0,
     mode: "scatter",
     modeElapsed: 0,
     elapsed: 0,
@@ -415,15 +418,15 @@
     game.superPowerUp = null;
     if (game.level >= 2) {
       const spots = chooseSpecialPositions(2, 10);
-      game.teleporters = spots.map((spot, index) => ({ ...spot, id: index }));
+      game.teleporters = spots.map((spot, index) => schedulePowerUp({ ...spot, id: index, active: true }));
     }
     if (game.level >= 3) {
       const [spot] = chooseSpecialPositions(1, 6);
-      if (spot) game.superPowerUp = { ...spot, active: true };
+      if (spot) game.superPowerUp = schedulePowerUp({ ...spot, active: true });
     }
     const addPowerUp = (type) => {
       const [spot] = chooseSpecialPositions(1, 6);
-      if (spot) game.powerUps.push({ ...spot, type, active: true });
+      if (spot) game.powerUps.push(schedulePowerUp({ ...spot, type, active: true }));
     };
     if (game.level >= 4) addPowerUp("radar");
     if (game.level >= 5) addPowerUp("shield");
@@ -433,6 +436,12 @@
     if (game.level >= 9) addPowerUp("second-chance");
     if (game.level >= 10) addPowerUp("dash");
     if (game.level >= 11) addPowerUp("ghost-bomb");
+  }
+
+  function schedulePowerUp(powerUp) {
+    powerUp.availableAt = game.elapsed + game.powerUpRevealSequence * POWER_UP_STAGGER;
+    game.powerUpRevealSequence += 1;
+    return powerUp;
   }
 
   function nextQuestion() {
@@ -470,6 +479,11 @@
     game.collisionGraceUntil = 0;
     game.dissolvingWalls = [];
     game.playerTrail = [];
+    game.powerUpRevealSequence = 0;
+    game.powerPellets.forEach((pellet) => {
+      pellet.active = true;
+      schedulePowerUp(pellet);
+    });
     setupLevelPowerUps();
     restorePlayerAfterMaze(previousPlayer);
     ghosts.forEach((ghost) => Object.assign(ghost, makeGhost(ghost.name, ghost.color, ghost.homeX, ghost.homeY, "left", ghost.delay)));
@@ -580,13 +594,13 @@
     if (game.feedback) return;
     const target = game.targets.find((item) => item.state === "normal" && distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
     if (target) { evaluateTarget(target); return; }
-    const pellet = game.powerPellets.find((item) => item.active && distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
+    const pellet = game.powerPellets.find((item) => item.active && game.elapsed >= item.availableAt && distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
     if (pellet) evaluatePowerPellet(pellet);
-    const teleporter = game.teleporters.find((item) => distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
+    const teleporter = game.teleporters.find((item) => game.elapsed >= item.availableAt && distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
     if (teleporter && game.elapsed >= game.teleportCooldownUntil) { activateTeleporter(teleporter); return; }
     const superPowerUp = game.superPowerUp;
-    if (superPowerUp?.active && distance(player, { x: superPowerUp.x + .5, y: superPowerUp.y + .5 }) < .45) activateSuperStrength(superPowerUp);
-    const powerUp = game.powerUps.find((item) => item.active && distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
+    if (superPowerUp?.active && game.elapsed >= superPowerUp.availableAt && distance(player, { x: superPowerUp.x + .5, y: superPowerUp.y + .5 }) < .45) activateSuperStrength(superPowerUp);
+    const powerUp = game.powerUps.find((item) => item.active && game.elapsed >= item.availableAt && distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
     if (powerUp) activatePowerUp(powerUp);
   }
 
@@ -629,8 +643,8 @@
       game.secondChanceActive = true;
       statusText.textContent = "Second Chance ready — one wrong answer will preserve your combo.";
     } else if (powerUp.type === "dash") {
-      game.dashUntil = game.elapsed + 5;
-      statusText.textContent = "Pac-Man Dash active for 5 seconds.";
+      game.dashUntil = game.elapsed + 8;
+      statusText.textContent = "Pac-Man Dash active for 8 seconds.";
     } else if (powerUp.type === "ghost-bomb") {
       resetGhostsAfterCapture();
       game.modeElapsed = 0;
@@ -1011,9 +1025,9 @@
   }
 
   function drawPowerPellets() {
-    const revealAlpha = powerUpRevealAlpha();
     game.powerPellets.forEach((pellet, index) => {
       if (!pellet.active) return;
+      const revealAlpha = powerUpRevealAlpha(pellet);
       const x = (pellet.x + .5) * TILE, y = (pellet.y + .5) * TILE;
       const rotation = settings.reducedMotion ? 0 : game.elapsed * 2.6 + index * 1.4;
       const glowPulse = settings.reducedMotion ? .7 : (Math.sin(game.elapsed * Math.PI * 1.2 + index) + 1) / 2;
@@ -1033,13 +1047,14 @@
         ctx.shadowColor = "#e5f8ff";
         ctx.beginPath(); ctx.arc(dotX, dotY, 1.7, 0, Math.PI * 2); ctx.fill();
       }
+      drawPowerSparkles("#319dff", revealAlpha, index, 10.5);
       ctx.restore();
     });
   }
 
   function drawTeleporters() {
-    const revealAlpha = powerUpRevealAlpha();
     game.teleporters.forEach((teleporter, index) => {
+      const revealAlpha = powerUpRevealAlpha(teleporter);
       const x = (teleporter.x + .5) * TILE;
       const y = (teleporter.y + .5) * TILE;
       const destination = game.teleporters.find((candidate) => candidate.id !== teleporter.id);
@@ -1066,13 +1081,14 @@
       ctx.strokeStyle = "#7fd8ff";
       ctx.lineWidth = 1.2;
       ctx.beginPath(); ctx.moveTo(5, 0); ctx.lineTo(-2, 0); ctx.stroke();
+      drawPowerSparkles("#9c4dff", revealAlpha, index + 10, 12);
       ctx.restore();
     });
   }
 
   function drawSuperPowerUp() {
     if (!game.superPowerUp?.active) return;
-    const revealAlpha = powerUpRevealAlpha();
+    const revealAlpha = powerUpRevealAlpha(game.superPowerUp);
     const x = (game.superPowerUp.x + .5) * TILE;
     const y = (game.superPowerUp.y + .5) * TILE;
     const rotation = settings.reducedMotion ? 0 : game.elapsed * 1.8;
@@ -1098,16 +1114,17 @@
       if (!point) ctx.moveTo(xPoint, yPoint); else ctx.lineTo(xPoint, yPoint);
     }
     ctx.closePath(); ctx.fill();
+    drawPowerSparkles("#ff72d2", revealAlpha * pulse, 30, 12);
     ctx.restore();
   }
 
   function drawPowerUps() {
-    const revealAlpha = powerUpRevealAlpha();
     game.powerUps.forEach((powerUp, index) => {
       if (!powerUp.active) return;
+      const revealAlpha = powerUpRevealAlpha(powerUp);
       const x = (powerUp.x + .5) * TILE;
       const y = (powerUp.y + .5) * TILE;
-      const rotation = settings.reducedMotion ? 0 : game.elapsed * 1.5 + index;
+      const rotation = settings.reducedMotion || powerUp.type === "time-warp" ? 0 : game.elapsed * 1.5 + index;
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(rotation);
@@ -1124,32 +1141,52 @@
       ctx.lineWidth = 1.2;
       ctx.shadowBlur = 14;
       ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.stroke();
+      drawPowerSparkles(powerColor, revealAlpha * pulse, index + 50, 12);
       ctx.globalAlpha = revealAlpha;
       ctx.shadowBlur = 15;
       ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
       if (powerUp.type === "radar") {
         ctx.strokeStyle = "#5dff9b";
         ctx.shadowColor = "#5dff9b";
-        ctx.beginPath(); ctx.moveTo(0, -7); ctx.lineTo(7, 0); ctx.lineTo(0, 7); ctx.lineTo(-7, 0); ctx.closePath(); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(-2, 0); ctx.lineTo(4, 0); ctx.lineTo(2, -2); ctx.moveTo(4, 0); ctx.lineTo(2, 2); ctx.stroke();
+        ctx.fillStyle = "rgba(93, 255, 155, .18)";
+        ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(8, 0); ctx.lineTo(0, 8); ctx.lineTo(-8, 0); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = "#5dff9b";
+        ctx.beginPath(); ctx.moveTo(-4, 0); ctx.lineTo(5, 0); ctx.lineTo(2, -3); ctx.moveTo(5, 0); ctx.lineTo(2, 3); ctx.stroke();
       } else if (powerUp.type === "shield") {
         ctx.strokeStyle = "#73e4ff";
         ctx.shadowColor = "#73e4ff";
-        ctx.beginPath(); ctx.arc(0, 0, 7, 0, Math.PI * 2); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(0, 4); ctx.moveTo(-4, 0); ctx.lineTo(4, 0); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(7, -5); ctx.lineTo(6, 3); ctx.quadraticCurveTo(4, 7, 0, 9); ctx.quadraticCurveTo(-4, 7, -6, 3); ctx.lineTo(-7, -5); ctx.closePath(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(0, 5); ctx.moveTo(-3, 1); ctx.lineTo(0, 4); ctx.lineTo(3, 1); ctx.stroke();
       } else if (powerUp.type === "ghost-freeze") {
         ctx.strokeStyle = "#b9efff";
         ctx.shadowColor = "#b9efff";
-        for (let ray = 0; ray < 3; ray++) { ctx.rotate(Math.PI / 3); ctx.beginPath(); ctx.moveTo(-7, 0); ctx.lineTo(7, 0); ctx.stroke(); }
+        for (let ray = 0; ray < 3; ray++) {
+          ctx.save();
+          ctx.rotate(ray * Math.PI / 3);
+          ctx.beginPath(); ctx.moveTo(-7, 0); ctx.lineTo(7, 0); ctx.moveTo(4, 0); ctx.lineTo(2, -2.5); ctx.moveTo(4, 0); ctx.lineTo(2, 2.5); ctx.moveTo(-4, 0); ctx.lineTo(-2, -2.5); ctx.moveTo(-4, 0); ctx.lineTo(-2, 2.5); ctx.stroke();
+          ctx.restore();
+        }
       } else if (powerUp.type === "decoy") {
         ctx.fillStyle = "#a8d9ff";
         ctx.shadowColor = "#a8d9ff";
-        ctx.beginPath(); ctx.arc(0, 0, 6, Math.PI * .2, Math.PI * 1.8); ctx.lineTo(0, 0); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 7, .22, Math.PI * 2 - .22); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#17204d";
+        ctx.shadowBlur = 0;
+        ctx.beginPath(); ctx.arc(2.5, -3, 1.2, 0, Math.PI * 2); ctx.fill();
       } else if (powerUp.type === "time-warp") {
         ctx.strokeStyle = "#ffd166";
         ctx.shadowColor = "#ffd166";
-        ctx.beginPath(); ctx.arc(0, 0, 7, 0, Math.PI * 2); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -4); ctx.lineTo(3, 0); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 0, 6.5, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, -6.5); ctx.lineTo(0, -5);
+        ctx.moveTo(4.6, -4.6); ctx.lineTo(3.5, -3.5);
+        ctx.moveTo(6.5, 0); ctx.lineTo(5, 0);
+        ctx.moveTo(0, 0); ctx.lineTo(0, -3.5); ctx.lineTo(3.2, 0);
+        ctx.stroke();
+        ctx.fillStyle = "#fff3ae";
+        ctx.beginPath(); ctx.arc(0, 0, 1.2, 0, Math.PI * 2); ctx.fill();
       } else if (powerUp.type === "second-chance") {
         ctx.fillStyle = "#ff9ed1";
         ctx.shadowColor = "#ff9ed1";
@@ -1157,12 +1194,11 @@
       } else if (powerUp.type === "dash") {
         ctx.strokeStyle = "#ffe66b";
         ctx.shadowColor = "#ffe66b";
-        ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(6, 0); ctx.moveTo(2, -4); ctx.lineTo(7, 0); ctx.lineTo(2, 4); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(-7, -5); ctx.lineTo(-3, -5); ctx.moveTo(-7, 5); ctx.lineTo(-3, 5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-7, -5); ctx.lineTo(-2, -5); ctx.moveTo(-8, 0); ctx.lineTo(-3, 0); ctx.moveTo(-7, 5); ctx.lineTo(-2, 5); ctx.moveTo(-1, -6); ctx.lineTo(7, 0); ctx.lineTo(-1, 6); ctx.stroke();
       } else if (powerUp.type === "ghost-bomb") {
         ctx.fillStyle = "#ff704d";
         ctx.shadowColor = "#ff704d";
-        ctx.beginPath(); ctx.arc(0, 2, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(0, 2, 6.5, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = "#ffd166";
         ctx.beginPath(); ctx.moveTo(1, -4); ctx.quadraticCurveTo(2, -8, 6, -8); ctx.stroke();
         ctx.fillStyle = "#fff3ae";
@@ -1172,11 +1208,35 @@
     });
   }
 
-  function powerUpRevealAlpha() {
+  function drawPowerSparkles(color, alpha, seed, radius) {
+    if (settings.reducedMotion || alpha <= 0) return;
+    for (let sparkle = 0; sparkle < 6; sparkle++) {
+      const angle = game.elapsed * .42 + seed * .7 + sparkle * Math.PI / 3;
+      const distance = radius + Math.sin(game.elapsed * 2.2 + seed + sparkle) * 1.8;
+      const size = sparkle % 3 === 0 ? 1.15 : .75;
+      ctx.globalAlpha = alpha * (.32 + .3 * ((Math.sin(game.elapsed * 3 + seed + sparkle) + 1) / 2));
+      ctx.fillStyle = color;
+      ctx.shadowBlur = 7;
+      ctx.shadowColor = color;
+      ctx.beginPath();
+      ctx.arc(Math.cos(angle) * distance, Math.sin(angle) * distance, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function powerUpRevealAlpha(powerUp) {
     const transition = game.mazeTransition;
-    if (!transition || transition.phase !== "in") return 1;
-    if (settings.reducedMotion) return 1;
-    return clamp((game.elapsed - transition.started) / (transition.until - transition.started), 0, 1);
+    const mazeAlpha = !transition || transition.phase !== "in"
+      ? 1
+      : settings.reducedMotion
+        ? 1
+        : clamp((game.elapsed - transition.started) / (transition.until - transition.started), 0, 1);
+    if (!powerUp || powerUp.availableAt == null) return mazeAlpha;
+    if (game.elapsed < powerUp.availableAt) return 0;
+    const revealProgress = settings.reducedMotion
+      ? 1
+      : clamp((game.elapsed - powerUp.availableAt) / POWER_UP_FADE_DURATION, 0, 1);
+    return mazeAlpha * revealProgress;
   }
 
   function drawDecoy() {
@@ -1216,9 +1276,9 @@
     ctx.shadowBlur = 20;
     ctx.shadowColor = "#48ff86";
     ctx.lineWidth = 2.5;
-    const arrowLength = TILE * .86;
-    const arrowTip = arrowLength;
-    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(arrowTip, 0); ctx.stroke();
+    const arrowStart = TILE * .43;
+    const arrowTip = TILE * .86;
+    ctx.beginPath(); ctx.moveTo(arrowStart, 0); ctx.lineTo(arrowTip, 0); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(arrowTip, 0); ctx.lineTo(arrowTip - 6, -4); ctx.lineTo(arrowTip - 6, 4); ctx.closePath(); ctx.fill();
     ctx.restore();
   }
