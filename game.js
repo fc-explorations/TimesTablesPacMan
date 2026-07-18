@@ -582,7 +582,6 @@
     drawTargets();
     drawPlayer();
     ghosts.forEach(drawGhost);
-    if (game.frightenedUntil > game.elapsed) drawFrightenedTimer();
   }
 
   function drawMaze() {
@@ -651,11 +650,6 @@
     ctx.beginPath(); ctx.arc(x, y - 2, r, Math.PI, 0); ctx.lineTo(x + r, y + r); ctx.lineTo(x + r * .5, y + r * .65); ctx.lineTo(x, y + r); ctx.lineTo(x - r * .5, y + r * .65); ctx.lineTo(x - r, y + r); ctx.closePath(); ctx.fill();
     if (ghost.state !== "eyes") { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x - 5, y - 3, 3.5, 0, Math.PI * 2); ctx.arc(x + 5, y - 3, 3.5, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = "#161448"; ctx.beginPath(); ctx.arc(x - 4, y - 3, 1.7, 0, Math.PI * 2); ctx.arc(x + 6, y - 3, 1.7, 0, Math.PI * 2); ctx.fill(); }
     ctx.restore();
-  }
-
-  function drawFrightenedTimer() {
-    const remaining = game.frightenedUntil - game.elapsed;
-    ctx.save(); ctx.fillStyle = "#cdd1ff"; ctx.font = "700 10px system-ui"; ctx.textAlign = "center"; ctx.fillText(`POWER ${remaining.toFixed(1)}s`, canvas.width / (canvas.width / (COLS * TILE)) / 2, 12); ctx.restore();
   }
 
   function updateUI() {
