@@ -28,7 +28,7 @@
 
   const TILE = 24;
   const COLS = 28;
-  const ROWS = 31;
+  const ROWS = 30;
   const DIRECTIONS = {
     left: { x: -1, y: 0, angle: Math.PI },
     right: { x: 1, y: 0, angle: 0 },
