@@ -190,6 +190,11 @@
     grid[14][COLS - 1] = "."; grid[15][COLS - 1] = ".";
     grid[0].fill("#");
     grid[ROWS - 1].fill("#");
+    // Match the two-cell top border: the last two rows are the bottom wall,
+    // while the row above remains part of the playable maze.
+    grid[ROWS - 3] = [...grid[ROWS - 4]];
+    grid[ROWS - 2].fill("#");
+    grid[ROWS - 1].fill("#");
     grid[0][13] = "."; grid[0][14] = ".";
     grid[ROWS - 1][13] = "."; grid[ROWS - 1][14] = ".";
     return isMazeSolvable(grid) ? grid : createMaze();
