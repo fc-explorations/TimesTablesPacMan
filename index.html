@@ -11,7 +11,7 @@
     <main class="app-shell">
       <header class="topbar">
         <div class="brand">
-          <span class="brand-mark" aria-hidden="true">●</span>
+          <span class="brand-mark" aria-hidden="true"></span>
           <div>
             <p class="eyebrow">Multiplication maze</p>
             <h1>Times Table Pac-Man</h1>
@@ -26,8 +26,19 @@
 
       <section class="game-layout" aria-label="Game area">
         <aside class="question-panel" aria-labelledby="question-label">
-          <p class="eyebrow" id="question-label">Find the answer</p>
+          <div class="mission-heading">
+            <span class="mission-star" aria-hidden="true">✦</span>
+            <p class="eyebrow" id="question-label">Your mission</p>
+            <span class="mission-star" aria-hidden="true">✦</span>
+          </div>
           <p class="question" id="question-text" aria-live="polite">Loading question…</p>
+          <p class="mission-copy">Find the correct answer<br />in the maze.</p>
+          <div class="progress-card" aria-label="Level progress">
+            <p class="eyebrow">Progress</p>
+            <div class="progress-summary"><span>Question</span><strong id="level-progress">0 / 3</strong><span>Table <b id="table-factor">× 3</b></span></div>
+            <div class="progress-dots" id="progress-dots" aria-hidden="true"></div>
+          </div>
+          <div class="streak-card"><p class="eyebrow">Streak</p><strong><span aria-hidden="true">🔥</span> <span id="streak-value">0</span></strong></div>
           <div class="countdown-wrap" id="question-countdown" hidden role="timer" aria-label="Next question countdown">
             <div class="countdown-ring" id="countdown-ring"><span id="countdown-value">0</span></div>
           </div>
@@ -41,16 +52,22 @@
               <span>Press P to continue</span>
             </div>
           </div>
-          <p class="help-text">Arrow keys or WASD to move · Run over an answer to activate it · P to pause</p>
+          <div class="control-strip" aria-label="Keyboard controls">
+            <span class="key">↑</span><span class="key">←</span><span class="key">↓</span><span class="key">→</span>
+            <span class="control-word">or</span>
+            <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span>
+            <span class="control-word">to move</span><span class="control-divider"></span><span class="key key-wide">P</span><span class="control-word">to pause</span>
+          </div>
         </div>
 
         <aside class="side-panel" aria-label="Score and game controls">
           <section class="score-panel" aria-label="Score">
-            <div class="stat"><span>Level</span><strong id="level">1</strong></div>
-            <div class="stat"><span>Score</span><strong id="score">0</strong></div>
-            <div class="stat"><span>Combo</span><strong id="combo">0</strong></div>
-            <div class="stat"><span>Best</span><strong id="best-score">0</strong></div>
+            <div class="stat"><svg class="stat-icon icon-gold" aria-hidden="true"><use href="icons.svg#trophy"></use></svg><div><span>Level</span><strong id="level">1</strong></div></div>
+            <div class="stat"><svg class="stat-icon icon-gold" aria-hidden="true"><use href="icons.svg#star"></use></svg><div><span>Score</span><strong id="score">0</strong></div></div>
+            <div class="stat"><svg class="stat-icon icon-cyan" aria-hidden="true"><use href="icons.svg#bolt"></use></svg><div><span>Combo</span><strong id="combo">0</strong></div></div>
+            <div class="stat"><svg class="stat-icon icon-gold" aria-hidden="true"><use href="icons.svg#crown"></use></svg><div><span>Best</span><strong id="best-score">0</strong></div></div>
           </section>
+          <section class="objective-card"><p class="eyebrow">Objective</p><p>Find the correct answer to earn points and build your streak!</p></section>
         </aside>
       </section>
 

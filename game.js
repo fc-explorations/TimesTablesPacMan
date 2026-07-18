@@ -13,6 +13,10 @@
   const comboEl = document.querySelector("#combo");
   const bestScoreEl = document.querySelector("#best-score");
   const levelEl = document.querySelector("#level");
+  const levelProgressEl = document.querySelector("#level-progress");
+  const tableFactorEl = document.querySelector("#table-factor");
+  const progressDotsEl = document.querySelector("#progress-dots");
+  const streakValueEl = document.querySelector("#streak-value");
   const pauseOverlay = document.querySelector("#pause-overlay");
   const restartButton = document.querySelector("#restart-button");
   const instructionsButton = document.querySelector("#instructions-button");
@@ -1151,10 +1155,17 @@
   }
 
   function updateUI() {
+    const answersPerLevel = clamp(Math.round(Number(settings.correctAnswersPerLevel) || 3), 1, 20);
     levelEl.textContent = String(game.level);
     scoreEl.textContent = String(game.score);
     comboEl.textContent = String(game.combo);
     bestScoreEl.textContent = String(game.best);
+    levelProgressEl.textContent = `${Math.min(game.correctAnswers, answersPerLevel)} / ${answersPerLevel}`;
+    tableFactorEl.textContent = game.question ? `× ${game.question.a}` : "× —";
+    streakValueEl.textContent = String(game.combo);
+    const progressRatio = answersPerLevel ? Math.min(1, game.correctAnswers / answersPerLevel) : 0;
+    const progressDots = 10;
+    progressDotsEl.innerHTML = Array.from({ length: progressDots }, (_, index) => `<span class="progress-dot${index < Math.round(progressRatio * progressDots) ? " is-active" : ""}></span>`).join("");
     pauseOverlay.hidden = !game.paused;
     if (game.feedback) {
       const remaining = Math.max(0, game.feedback.until - game.elapsed);
