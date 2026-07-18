@@ -14,9 +14,12 @@
   const pauseButton = document.querySelector("#pause-button");
   const stopButton = document.querySelector("#stop-button");
   const restartButton = document.querySelector("#restart-button");
+  const instructionsButton = document.querySelector("#instructions-button");
   const settingsButton = document.querySelector("#settings-button");
-  const settingsPanel = document.querySelector("#settings-panel");
+  const settingsDialog = document.querySelector("#settings-dialog");
   const closeSettings = document.querySelector("#close-settings");
+  const instructionsDialog = document.querySelector("#instructions-dialog");
+  const closeInstructions = document.querySelector("#close-instructions");
   const settingsForm = document.querySelector("#settings-form");
   const minFactorInput = document.querySelector("#min-factor");
   const maxFactorInput = document.querySelector("#max-factor");
@@ -317,14 +320,27 @@
           ghost.dir = ghost.state === "frightened" ? options[randomInt(0, options.length - 1)] : options.sort((a, b) => distanceToTile(target, nextTile(ghost, a)) - distanceToTile(target, nextTile(ghost, b)))[0];
         }
       }
-      const d = DIRECTIONS[ghost.dir];
-      ghost.x += d.x * speed * dt;
-      ghost.y += d.y * speed * dt;
-      if (ghost.x < 0) ghost.x = COLS;
-      if (ghost.x > COLS) ghost.x = 0;
+      advanceGhost(ghost, speed, dt);
       if (ghost.state === "eyes" && distance(ghost, ghostHome) < .25) { ghost.eaten = false; ghost.state = game.mode; }
       if (distance(player, ghost) < .55) handleGhostCollision(ghost);
     });
+  }
+
+  function advanceGhost(ghost, speed, dt) {
+    const d = DIRECTIONS[ghost.dir];
+    const current = { x: Math.floor(ghost.x) + .5, y: Math.floor(ghost.y) + .5 };
+    const destination = { x: current.x + d.x, y: current.y + d.y };
+    const distanceToCenter = Math.abs(d.x ? destination.x - ghost.x : destination.y - ghost.y);
+    const step = speed * dt;
+    if (step >= distanceToCenter) {
+      ghost.x = destination.x;
+      ghost.y = destination.y;
+      if (ghost.x < 0) ghost.x = COLS - .5;
+      if (ghost.x >= COLS) ghost.x = .5;
+    } else {
+      ghost.x += d.x * step;
+      ghost.y += d.y * step;
+    }
   }
 
   function nextTile(entity, dir) { const d = DIRECTIONS[dir]; const tile = centerTile(entity); return { x: tile.x + d.x + .5, y: tile.y + d.y + .5 }; }
@@ -481,7 +497,7 @@
   }
 
   function togglePause(force) {
-    game.paused = typeof force === "boolean" ? !force : !game.paused;
+    game.paused = typeof force === "boolean" ? force : !game.paused;
     updateUI();
     statusText.textContent = game.paused ? "Game paused." : "Choose a direction to continue.";
   }
@@ -500,9 +516,23 @@
   }
 
   function openSettings(open) {
-    settingsPanel.hidden = !open;
     settingsButton.setAttribute("aria-expanded", String(open));
-    if (open) { populateSettings(); minFactorInput.focus(); }
+    if (open) {
+      populateSettings();
+      if (typeof settingsDialog.showModal === "function") settingsDialog.showModal();
+      else settingsDialog.hidden = false;
+      minFactorInput.focus();
+    } else if (settingsDialog.open && typeof settingsDialog.close === "function") settingsDialog.close();
+    else settingsDialog.hidden = true;
+  }
+
+  function openInstructions(open) {
+    if (open) {
+      if (typeof instructionsDialog.showModal === "function") instructionsDialog.showModal();
+      else instructionsDialog.hidden = false;
+      closeInstructions.focus();
+    } else if (instructionsDialog.open && typeof instructionsDialog.close === "function") instructionsDialog.close();
+    else instructionsDialog.hidden = true;
   }
 
   function saveForm(event) {
@@ -539,8 +569,11 @@
   stopButton.addEventListener("click", requestStop);
   pauseButton.addEventListener("click", () => togglePause());
   restartButton.addEventListener("click", startNewSession);
-  settingsButton.addEventListener("click", () => openSettings(settingsPanel.hidden));
+  instructionsButton.addEventListener("click", () => openInstructions(true));
+  settingsButton.addEventListener("click", () => openSettings(!settingsDialog.open));
   closeSettings.addEventListener("click", () => openSettings(false));
+  closeInstructions.addEventListener("click", () => openInstructions(false));
+  settingsDialog.addEventListener("close", () => settingsButton.setAttribute("aria-expanded", "false"));
   settingsForm.addEventListener("submit", saveForm);
 
   bestScoreEl.textContent = String(game.best);

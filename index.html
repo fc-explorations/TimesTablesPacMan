@@ -18,7 +18,8 @@
           </div>
         </div>
         <div class="header-actions">
-          <button class="button button-ghost" id="settings-button" type="button" aria-expanded="false" aria-controls="settings-panel">Settings</button>
+          <button class="button button-ghost" id="instructions-button" type="button">How to play</button>
+          <button class="button button-ghost" id="settings-button" type="button" aria-expanded="false" aria-controls="settings-dialog">Settings</button>
           <button class="button button-ghost" id="pause-button" type="button">Pause</button>
         </div>
       </header>
@@ -61,11 +62,11 @@
         </aside>
       </section>
 
-      <section class="settings-panel" id="settings-panel" hidden>
+      <dialog class="modal settings-panel" id="settings-dialog" aria-labelledby="settings-title">
         <div class="settings-heading">
           <div>
             <p class="eyebrow">Personalise practice</p>
-            <h2>Game settings</h2>
+            <h2 id="settings-title">Game settings</h2>
           </div>
           <button class="icon-button" id="close-settings" type="button" aria-label="Close settings">×</button>
         </div>
@@ -79,7 +80,24 @@
           <label class="checkbox-label"><input id="reduced-motion" name="reducedMotion" type="checkbox" /> Reduce movement and flashing effects</label>
           <div class="settings-actions"><button class="button button-primary" type="submit">Save settings</button></div>
         </form>
-      </section>
+      </dialog>
+
+      <dialog class="modal instructions-panel" id="instructions-dialog" aria-labelledby="instructions-title">
+        <div class="settings-heading">
+          <div>
+            <p class="eyebrow">Learn the rules</p>
+            <h2 id="instructions-title">How to play</h2>
+          </div>
+          <button class="icon-button" id="close-instructions" type="button" aria-label="Close instructions">×</button>
+        </div>
+        <div class="instructions-content">
+          <p><strong>1. Find the answer.</strong> Read the multiplication question at the top and steer Pac-Man to the matching number.</p>
+          <p><strong>2. Stop and hold.</strong> Press Space or the Stop Pac-Man button. Pac-Man will brake at the next tile center. Stay there until the countdown finishes.</p>
+          <p><strong>3. Learn from feedback.</strong> Correct answers glow green. Wrong answers glow red and the correct answer glows white before the next question appears.</p>
+          <p><strong>4. Watch the ghosts.</strong> Avoid ghosts, or stop on a glowing power pellet to frighten them temporarily.</p>
+          <p class="instructions-controls"><strong>Controls:</strong> Arrow keys/WASD or swipe to steer · Space to stop · P to pause</p>
+        </div>
+      </dialog>
 
       <footer class="footer"><span>Practice makes progress.</span><span id="status-text" role="status">Choose a direction to begin.</span></footer>
     </main>
