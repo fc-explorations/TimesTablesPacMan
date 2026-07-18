@@ -27,7 +27,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Level 4 unlocks Radar, which briefly points toward the correct answer with a green glowing arrow.
 - Level 5 unlocks Shield, which absorbs one ghost collision before being consumed.
 - Level 6 unlocks Ghost Freeze, which temporarily stops the ghosts.
-- Level 7 unlocks Decoy Pac-Man, which sends a short-lived duplicate along the maze to distract ghosts; it starts opposite Pac-Man and tends to keep moving away from him.
+- Level 7 unlocks Decoy Pac-Man, which sends a short-lived duplicate along random valid maze lanes to distract ghosts.
 - Level 8 unlocks Time Warp, which temporarily slows ghost movement.
 - Level 9 unlocks Second Chance, which marks one wrong target red, keeps the current question active, and preserves the combo for another attempt.
 - All non-portal power-ups, including orbs and the super-strength star, are consumed when activated; paired teleporters remain reusable.
@@ -47,7 +47,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 | Green diamond with a right-pointing arrow | Radar | Shows a short green glowing arrow toward the correct answer. |
 | Cyan circle with a cross | Shield | Absorbs one ghost collision. |
 | Pale-blue snowflake | Ghost Freeze | Stops ghost movement temporarily. |
-| Light-blue Pac-Man silhouette | Decoy Pac-Man | Sends a short-lived duplicate through the maze, biased away from real Pac-Man, to distract ghosts. |
+| Light-blue Pac-Man silhouette | Decoy Pac-Man | Sends a short-lived duplicate through random valid maze lanes to distract ghosts. |
 | Gold clock | Time Warp | Slows ghost movement temporarily. |
 | Pink heart | Second Chance | Marks one wrong target red, keeps the question active without revealing the answer, and preserves the combo for another attempt. |
 
