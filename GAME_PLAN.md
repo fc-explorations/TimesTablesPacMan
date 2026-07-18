@@ -28,7 +28,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Level 6 unlocks Ghost Freeze, which temporarily stops the ghosts.
 - Level 7 unlocks Decoy Pac-Man, which sends a short-lived duplicate along the maze to distract ghosts.
 - Level 8 unlocks Time Warp, which temporarily slows ghost movement.
-- Level 9 unlocks Second Chance, which preserves the current combo after one wrong answer.
+- Level 9 unlocks Second Chance, which marks one wrong target red, keeps the current question active, and preserves the combo for another attempt.
 - All non-portal power-ups, including orbs and the super-strength star, are consumed when activated; paired teleporters remain reusable.
 - Levels advance after a configurable number of correct answers; wrong answers and penalties never reduce the current level.
 - Ghost collisions reset Pac-Man and combo, but endless practice continues.
@@ -48,7 +48,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 | Pale-blue snowflake | Ghost Freeze | Stops ghost movement temporarily. |
 | Light-blue Pac-Man silhouette | Decoy Pac-Man | Sends a short-lived duplicate through the maze to distract ghosts. |
 | Gold clock | Time Warp | Slows ghost movement temporarily. |
-| Pink heart | Second Chance | Preserves the current combo after one wrong answer. |
+| Pink heart | Second Chance | Marks one wrong target red, keeps the question active without revealing the answer, and preserves the combo for another attempt. |
 
 ## Technical Design
 

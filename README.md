@@ -26,7 +26,7 @@ Correct answers advance the level after the configured correct-answer threshold.
 - **Level 6:** Ghost Freeze stops the ghosts temporarily.
 - **Level 7:** Decoy Pac-Man creates a short-lived duplicate that distracts the ghosts.
 - **Level 8:** Time Warp slows the ghosts temporarily.
-- **Level 9:** Second Chance preserves the current combo after one wrong answer.
+- **Level 9:** Second Chance marks one wrong target red, keeps the question active without revealing the answer, and preserves the combo for another attempt.
 
 All non-portal power-ups disappear after they are consumed, including the blue orbs and super-strength star. Teleporters are the exception and can be used repeatedly.
 

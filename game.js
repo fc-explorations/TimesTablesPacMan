@@ -638,6 +638,12 @@
       const protectedCombo = game.secondChanceActive;
       game.secondChanceActive = false;
       if (!protectedCombo) game.combo = 0;
+      if (protectedCombo) {
+        questionText.className = "question";
+        statusText.textContent = "Second Chance — try another number.";
+        updateUI();
+        return;
+      }
       questionText.textContent = completedEquation(game.question, target.value);
       questionText.className = "question answer-bad";
       game.feedback = { type: "bad", until: game.elapsed + settings.feedbackDuration, started: game.elapsed, question: game.question };
