@@ -929,8 +929,8 @@
       const x = (teleporter.x + .5) * TILE;
       const y = (teleporter.y + .5) * TILE;
       const destination = game.teleporters.find((candidate) => candidate.id !== teleporter.id);
-      const dx = destination ? wrappedDifference(teleporter.x + .5, destination.x + .5, COLS) : 1;
-      const dy = destination ? wrappedDifference(teleporter.y + .5, destination.y + .5, ROWS) : 0;
+      const dx = destination ? destination.x - teleporter.x : 1;
+      const dy = destination ? destination.y - teleporter.y : 0;
       const pointingAngle = Math.atan2(dy, dx);
       const wiggle = settings.reducedMotion ? 0 : Math.sin(game.elapsed * 3.2 + index * 1.4) * .12;
       ctx.save();
