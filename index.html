@@ -24,18 +24,11 @@
         </div>
       </header>
 
-      <section class="question-card" aria-labelledby="question-label">
-        <p class="eyebrow" id="question-label">Find the answer in the maze</p>
-        <p class="question" id="question-text" aria-live="polite">Loading question…</p>
-        <p class="feedback" id="feedback-text" aria-live="assertive"></p>
-      </section>
-
       <section class="game-layout" aria-label="Game area">
-        <aside class="score-panel" aria-label="Score">
-          <div class="stat"><span>Score</span><strong id="score">0</strong></div>
-          <div class="stat"><span>Combo</span><strong id="combo">0</strong></div>
-          <div class="stat"><span>Best</span><strong id="best-score">0</strong></div>
-          <div class="status-pill" id="status-pill">Ready</div>
+        <aside class="question-panel" aria-labelledby="question-label">
+          <p class="eyebrow" id="question-label">Find the answer</p>
+          <p class="question" id="question-text" aria-live="polite">Loading question…</p>
+          <p class="feedback" id="feedback-text" aria-live="assertive"></p>
         </aside>
 
         <div class="board-wrap">
@@ -49,14 +42,16 @@
           <p class="help-text">Arrow keys or WASD to move · Run over an answer to activate it · P to pause</p>
         </div>
 
-        <aside class="side-panel" aria-label="Game controls">
-          <div class="legend-card">
-            <h2>How to play</h2>
-            <p>Numbers occupy maze lanes. Steer over an answer to activate it, or use the open lane beside it to avoid it.</p>
-            <div class="legend-row"><span class="legend-dot answer-dot">7</span><span>Answer target</span></div>
-            <div class="legend-row"><span class="legend-dot pellet-dot"></span><span>Power pellet</span></div>
+        <aside class="side-panel" aria-label="Score and game controls">
+          <section class="score-panel" aria-label="Score">
+            <div class="stat"><span>Score</span><strong id="score">0</strong></div>
+            <div class="stat"><span>Combo</span><strong id="combo">0</strong></div>
+            <div class="stat"><span>Best</span><strong id="best-score">0</strong></div>
+            <div class="status-pill" id="status-pill">Ready</div>
+          </section>
+          <div class="control-buttons">
+            <button class="button button-secondary wide" id="restart-button" type="button">New session</button>
           </div>
-          <button class="button button-secondary wide" id="restart-button" type="button">New session</button>
           <div class="swipe-hint" aria-hidden="true">Swipe on the maze to steer</div>
         </aside>
       </section>
@@ -89,7 +84,7 @@
           <button class="icon-button" id="close-instructions" type="button" aria-label="Close instructions">×</button>
         </div>
         <div class="instructions-content">
-          <p><strong>1. Find the answer.</strong> Read the multiplication question at the top and steer Pac-Man to the matching number.</p>
+          <p><strong>1. Find the answer.</strong> Read the multiplication question in the left sidebar and steer Pac-Man to the matching number.</p>
           <p><strong>2. Choose your lane.</strong> Numbers sit in the maze lanes. Run over a number to activate it, or steer around it if it is not your answer.</p>
           <p><strong>3. Learn from feedback.</strong> Correct answers glow green. Wrong answers glow red and the correct answer glows white before the next question appears.</p>
           <p><strong>4. Watch the ghosts.</strong> Avoid ghosts, or run over a glowing power pellet to frighten them temporarily.</p>

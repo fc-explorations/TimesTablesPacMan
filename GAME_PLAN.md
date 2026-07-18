@@ -4,7 +4,7 @@
 
 Times Table Pac-Man is a single-page educational maze game designed for GitHub Pages. It uses vanilla HTML, CSS, and JavaScript with no build step.
 
-Pac-Man moves through a classic-inspired toroidal maze while a multiplication question is shown at the top of the screen. One correct answer and several plausible distractors are scattered through the maze lanes. Pac-Man immediately activates a target when he runs over it, so players can steer into the desired answer or use another lane to avoid a number.
+Pac-Man moves through a classic-inspired toroidal maze while a multiplication question is shown in the left sidebar. One correct answer and several plausible distractors are scattered through the maze lanes. Pac-Man immediately activates a target when he runs over it, so players can steer into the desired answer or use another lane to avoid a number.
 
 ## Gameplay Rules
 
