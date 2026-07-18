@@ -52,6 +52,6 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 ## Defaults
 
 - Factor range: 2–12.
-- Feedback duration: 3 seconds.
+- Feedback duration: 2 seconds.
 - Number targets per question: one correct plus a configurable number of distractors, defaulting to four.
 - Score and combo are session-only; settings persist locally.

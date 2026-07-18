@@ -81,7 +81,7 @@
   ];
 
   function defaultSettings() {
-    return { minFactor: 2, maxFactor: 12, distractorCount: 4, feedbackDuration: 3, reducedMotion: false };
+    return { minFactor: 2, maxFactor: 12, distractorCount: 4, feedbackDuration: 2, reducedMotion: false };
   }
 
   function loadSettings() {
@@ -719,7 +719,7 @@
     event.preventDefault();
     const min = clamp(Math.round(Number(minFactorInput.value) || 2), 1, 20);
     const max = clamp(Math.round(Number(maxFactorInput.value) || 12), min, 20);
-    settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 4), 1, 8); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 3, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
+    settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 4), 1, 8); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
     saveSettings(); openSettings(false); nextQuestion(); statusText.textContent = "Settings saved.";
   }
 
