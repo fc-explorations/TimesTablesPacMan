@@ -3,6 +3,7 @@
 
   const canvas = document.querySelector("#game-canvas");
   const ctx = canvas.getContext("2d");
+  const questionPanel = document.querySelector(".question-panel");
   const questionText = document.querySelector("#question-text");
   const statusText = document.querySelector("#status-text");
   const questionCountdown = document.querySelector("#question-countdown");
@@ -358,6 +359,7 @@
     questionText.className = "question";
     game.feedback = null;
     questionCountdown.hidden = true;
+    questionPanel.classList.remove("with-countdown");
     updateUI();
   }
 
@@ -660,11 +662,13 @@
       const remaining = Math.max(0, game.feedback.until - game.elapsed);
       const progress = clamp(remaining / settings.feedbackDuration, 0, 1);
       questionCountdown.hidden = false;
+      questionPanel.classList.add("with-countdown");
       countdownValue.textContent = String(Math.ceil(remaining));
       countdownRing.style.setProperty("--progress", `${progress * 100}%`);
       questionCountdown.setAttribute("aria-label", `Next question in ${Math.ceil(remaining)} seconds`);
     } else {
       questionCountdown.hidden = true;
+      questionPanel.classList.remove("with-countdown");
     }
   }
 
