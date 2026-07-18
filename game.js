@@ -72,6 +72,8 @@
     shieldActive: false,
     ghostFreezeUntil: 0,
     decoy: null,
+    timeWarpUntil: 0,
+    secondChanceActive: false,
     frightenedUntil: 0,
     hitStarted: 0,
     respawnAt: 0,
@@ -416,6 +418,8 @@
     if (game.level >= 5) addPowerUp("shield");
     if (game.level >= 6) addPowerUp("ghost-freeze");
     if (game.level >= 7) addPowerUp("decoy");
+    if (game.level >= 8) addPowerUp("time-warp");
+    if (game.level >= 9) addPowerUp("second-chance");
   }
 
   function nextQuestion() {
@@ -445,6 +449,8 @@
     game.shieldActive = false;
     game.ghostFreezeUntil = 0;
     game.decoy = null;
+    game.timeWarpUntil = 0;
+    game.secondChanceActive = false;
     setupLevelPowerUps();
     restorePlayerAfterMaze(previousPlayer);
     ghosts.forEach((ghost) => Object.assign(ghost, makeGhost(ghost.name, ghost.color, ghost.homeX, ghost.homeY, "left", ghost.delay)));
@@ -562,6 +568,12 @@
     } else if (powerUp.type === "decoy") {
       game.decoy = { x: player.x, y: player.y, dir: player.dir, speed: player.speed * .8, until: game.elapsed + 7, mouth: 0 };
       statusText.textContent = "Decoy Pac-Man is distracting the ghosts.";
+    } else if (powerUp.type === "time-warp") {
+      game.timeWarpUntil = game.elapsed + 6;
+      statusText.textContent = "Time Warp active — ghosts are slowed for 6 seconds.";
+    } else if (powerUp.type === "second-chance") {
+      game.secondChanceActive = true;
+      statusText.textContent = "Second Chance ready — one wrong answer will preserve your combo.";
     }
   }
 
@@ -623,11 +635,13 @@
     } else {
       target.state = "wrong";
       game.score = Math.max(0, game.score - 25);
-      game.combo = 0;
+      const protectedCombo = game.secondChanceActive;
+      game.secondChanceActive = false;
+      if (!protectedCombo) game.combo = 0;
       questionText.textContent = completedEquation(game.question, target.value);
       questionText.className = "question answer-bad";
       game.feedback = { type: "bad", until: game.elapsed + settings.feedbackDuration, started: game.elapsed, question: game.question };
-      statusText.textContent = "Try the next one.";
+      statusText.textContent = protectedCombo ? "Second Chance saved your combo." : "Try the next one.";
       window.setTimeout(() => {
         if (game.feedback?.question !== game.question || game.feedback.type !== "bad") return;
         questionText.textContent = completedEquation(game.question, game.question.answer);
@@ -649,6 +663,7 @@
   function updateGhosts(dt) {
     const frightened = game.elapsed < game.frightenedUntil;
     const frozen = game.elapsed < game.ghostFreezeUntil;
+    const timeWarp = game.elapsed < game.timeWarpUntil ? .45 : 1;
     if (!frightened) {
       game.modeElapsed += dt;
       const cycle = game.modeElapsed % 54;
@@ -658,7 +673,7 @@
       if (frozen) { ghost.state = "frozen"; return; }
       if (ghost.phase > 0) { ghost.phase -= dt; return; }
       ghost.state = ghost.eaten ? "eyes" : ghost.releasing ? "exit" : frightened ? "frightened" : game.mode;
-      const speed = ghost.state === "frightened" ? 2.1 * speedMultiplier() : ghost.state === "eyes" ? 6 * speedMultiplier() : ghost.speed;
+      const speed = (ghost.state === "frightened" ? 2.1 * speedMultiplier() : ghost.state === "eyes" ? 6 * speedMultiplier() : ghost.speed) * timeWarp;
       if (!ghost.destination) {
         ghost.x = Math.floor(ghost.x) + .5;
         ghost.y = Math.floor(ghost.y) + .5;
@@ -927,6 +942,15 @@
         ctx.fillStyle = "#a8d9ff";
         ctx.shadowColor = "#a8d9ff";
         ctx.beginPath(); ctx.arc(0, 0, 6, Math.PI * .2, Math.PI * 1.8); ctx.lineTo(0, 0); ctx.closePath(); ctx.fill();
+      } else if (powerUp.type === "time-warp") {
+        ctx.strokeStyle = "#ffd166";
+        ctx.shadowColor = "#ffd166";
+        ctx.beginPath(); ctx.arc(0, 0, 7, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -4); ctx.lineTo(3, 0); ctx.stroke();
+      } else if (powerUp.type === "second-chance") {
+        ctx.fillStyle = "#ff9ed1";
+        ctx.shadowColor = "#ff9ed1";
+        ctx.beginPath(); ctx.moveTo(0, 7); ctx.bezierCurveTo(-10, 1, -6, -7, 0, -3); ctx.bezierCurveTo(6, -7, 10, 1, 0, 7); ctx.closePath(); ctx.fill();
       }
       ctx.restore();
     });

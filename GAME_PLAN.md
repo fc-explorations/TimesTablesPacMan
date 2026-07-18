@@ -27,6 +27,8 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Level 5 unlocks Shield, which absorbs one ghost collision before being consumed.
 - Level 6 unlocks Ghost Freeze, which temporarily stops the ghosts.
 - Level 7 unlocks Decoy Pac-Man, which sends a short-lived duplicate along the maze to distract ghosts.
+- Level 8 unlocks Time Warp, which temporarily slows ghost movement.
+- Level 9 unlocks Second Chance, which preserves the current combo after one wrong answer.
 - All non-portal power-ups, including orbs and the super-strength star, are consumed when activated; paired teleporters remain reusable.
 - Levels advance after a configurable number of correct answers; wrong answers and penalties never reduce the current level.
 - Ghost collisions reset Pac-Man and combo, but endless practice continues.
