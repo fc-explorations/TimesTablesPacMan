@@ -111,6 +111,10 @@
       "#............#",
       "##############"
     ];
+    // Close the few tempting-looking branch pockets so every lane belongs to a loop.
+    [[11, 5], [11, 7], [4, 6], [11, 9]].forEach(([x, y]) => {
+      blueprint[y] = `${blueprint[y].slice(0, x)}.${blueprint[y].slice(x + 1)}`;
+    });
     const grid = Array.from({ length: ROWS }, () => Array(COLS).fill("#"));
     blueprint.forEach((row, blueprintY) => {
       for (let blueprintX = 0; blueprintX < row.length; blueprintX++) {
