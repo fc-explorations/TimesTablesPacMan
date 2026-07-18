@@ -897,6 +897,7 @@
   }
 
   function drawPowerPellets() {
+    const revealAlpha = powerUpRevealAlpha();
     game.powerPellets.forEach((pellet, index) => {
       if (!pellet.active) return;
       const x = (pellet.x + .5) * TILE, y = (pellet.y + .5) * TILE;
@@ -904,7 +905,7 @@
       const glowPulse = settings.reducedMotion ? .7 : (Math.sin(game.elapsed * Math.PI * 1.2 + index) + 1) / 2;
       ctx.save();
       ctx.translate(x, y);
-      ctx.globalAlpha = .35 + (.65 * glowPulse);
+      ctx.globalAlpha = revealAlpha * (.35 + (.65 * glowPulse));
       ctx.fillStyle = "#319dff";
       ctx.shadowBlur = 4 + (28 * glowPulse);
       ctx.shadowColor = "#319dff";
@@ -923,6 +924,7 @@
   }
 
   function drawTeleporters() {
+    const revealAlpha = powerUpRevealAlpha();
     game.teleporters.forEach((teleporter, index) => {
       const x = (teleporter.x + .5) * TILE;
       const y = (teleporter.y + .5) * TILE;
@@ -930,6 +932,7 @@
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(rotation);
+      ctx.globalAlpha = revealAlpha;
       ctx.strokeStyle = "#cf76ff";
       ctx.shadowBlur = 16;
       ctx.shadowColor = "#9c4dff";
@@ -944,6 +947,7 @@
 
   function drawSuperPowerUp() {
     if (!game.superPowerUp?.active) return;
+    const revealAlpha = powerUpRevealAlpha();
     const x = (game.superPowerUp.x + .5) * TILE;
     const y = (game.superPowerUp.y + .5) * TILE;
     const rotation = settings.reducedMotion ? 0 : game.elapsed * 1.8;
@@ -951,7 +955,7 @@
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(rotation);
-    ctx.globalAlpha = pulse;
+    ctx.globalAlpha = revealAlpha * pulse;
     ctx.fillStyle = "#ff72d2";
     ctx.shadowBlur = 18;
     ctx.shadowColor = "#ff72d2";
@@ -968,6 +972,7 @@
   }
 
   function drawPowerUps() {
+    const revealAlpha = powerUpRevealAlpha();
     game.powerUps.forEach((powerUp, index) => {
       if (!powerUp.active) return;
       const x = (powerUp.x + .5) * TILE;
@@ -976,6 +981,7 @@
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(rotation);
+      ctx.globalAlpha = revealAlpha;
       ctx.shadowBlur = 15;
       ctx.lineWidth = 2;
       if (powerUp.type === "radar") {
@@ -1008,6 +1014,13 @@
       }
       ctx.restore();
     });
+  }
+
+  function powerUpRevealAlpha() {
+    const transition = game.mazeTransition;
+    if (!transition || transition.phase !== "in") return 1;
+    if (settings.reducedMotion) return 1;
+    return clamp((game.elapsed - transition.started) / (transition.until - transition.started), 0, 1);
   }
 
   function drawDecoy() {
