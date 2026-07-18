@@ -928,19 +928,24 @@
     game.teleporters.forEach((teleporter, index) => {
       const x = (teleporter.x + .5) * TILE;
       const y = (teleporter.y + .5) * TILE;
-      const rotation = settings.reducedMotion ? 0 : game.elapsed * 2 + index;
+      const destination = game.teleporters.find((candidate) => candidate.id !== teleporter.id);
+      const dx = destination ? wrappedDifference(teleporter.x + .5, destination.x + .5, COLS) : 1;
+      const dy = destination ? wrappedDifference(teleporter.y + .5, destination.y + .5, ROWS) : 0;
+      const pointingAngle = Math.atan2(dy, dx);
+      const wiggle = settings.reducedMotion ? 0 : Math.sin(game.elapsed * 3.2 + index * 1.4) * .12;
       ctx.save();
       ctx.translate(x, y);
-      ctx.rotate(rotation);
+      ctx.rotate(pointingAngle + wiggle);
       ctx.globalAlpha = revealAlpha;
-      ctx.strokeStyle = "#cf76ff";
-      ctx.shadowBlur = 16;
-      ctx.shadowColor = "#9c4dff";
-      ctx.lineWidth = 2.5;
-      ctx.beginPath(); ctx.ellipse(0, 0, 8, 4, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = "#9c4dff";
+      ctx.strokeStyle = "#d69bff";
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = "#b45cff";
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(-5, -6); ctx.lineTo(-5, 6); ctx.closePath(); ctx.fill(); ctx.stroke();
       ctx.strokeStyle = "#7fd8ff";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.ellipse(0, 0, 4, 8, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(5, 0); ctx.lineTo(-2, 0); ctx.stroke();
       ctx.restore();
     });
   }

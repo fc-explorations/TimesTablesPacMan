@@ -42,7 +42,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 | Icon | Power-up | Effect |
 | --- | --- | --- |
 | Rotating blue orb with a moving surface dot | Frightened orb | Makes ghosts frightened and eatable temporarily. |
-| Purple/blue crossed ellipse | Teleporter | Sends Pac-Man to another portal; portals remain reusable. |
+| Glowing isosceles triangle pointing toward its paired triangle | Teleporter | Sends Pac-Man to another portal; portals remain reusable. |
 | Rotating pink star | Super Strength | Lets Pac-Man erase wall blocks temporarily, including boundary walls. |
 | Green diamond with a right-pointing arrow | Radar | Shows a short green glowing arrow toward the correct answer. |
 | Cyan circle with a cross | Shield | Absorbs one ghost collision. |
