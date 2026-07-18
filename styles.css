@@ -45,7 +45,6 @@ h2 { font-size: 1.05rem; }
 .game-layout { display: grid; grid-template-columns: 190px minmax(420px, 672px) 190px; align-items: start; justify-content: center; gap: 18px; }
 .score-panel, .settings-panel { border: 1px solid var(--line); border-radius: 16px; background: rgba(23, 22, 43, .9); }
 .score-panel { display: grid; gap: 1px; overflow: hidden; }
-.control-buttons { margin-top: 12px; }
 .stat { padding: 16px 14px; background: rgba(255,255,255,.025); }
 .stat span { display: block; color: var(--muted); font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
 .stat strong { display: block; margin-top: 3px; color: var(--yellow); font-size: 1.4rem; }
@@ -86,7 +85,6 @@ input[type="number"] { width: 100%; padding: 10px; border: 1px solid var(--line)
   .status-pill { align-self: center; }
   .side-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .score-panel { grid-column: 1 / -1; }
-  .control-buttons { margin-top: 0; }
   .swipe-hint { grid-column: 1 / -1; margin-top: 0; }
 }
 @media (max-width: 560px) {
