@@ -1238,10 +1238,18 @@
     else if (event.key.toLowerCase() === "p") { event.preventDefault(); togglePause(); }
   }
 
-  function handleTouchStart(event) { const touch = event.changedTouches[0]; game.touchStart = { x: touch.clientX, y: touch.clientY }; }
+  function handleTouchStart(event) {
+    if (event.cancelable) event.preventDefault();
+    const touch = event.touches?.[0] || event.changedTouches?.[0];
+    if (touch) game.touchStart = { x: touch.clientX, y: touch.clientY };
+  }
+  function handleTouchMove(event) { if (event.cancelable) event.preventDefault(); }
   function handleTouchEnd(event) {
+    if (event.cancelable) event.preventDefault();
     if (!game.touchStart) return;
-    const touch = event.changedTouches[0]; const dx = touch.clientX - game.touchStart.x; const dy = touch.clientY - game.touchStart.y; game.touchStart = null;
+    const touch = event.changedTouches?.[0] || event.touches?.[0];
+    if (!touch) return;
+    const dx = touch.clientX - game.touchStart.x; const dy = touch.clientY - game.touchStart.y; game.touchStart = null;
     if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
     setDirection(Math.abs(dx) > Math.abs(dy) ? dx > 0 ? "right" : "left" : dy > 0 ? "down" : "up");
   }
@@ -1252,8 +1260,9 @@
   }
 
   document.addEventListener("keydown", handleKey);
-  canvas.addEventListener("touchstart", handleTouchStart, { passive: true });
-  canvas.addEventListener("touchend", handleTouchEnd, { passive: true });
+  canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
+  canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+  canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
   restartButton.addEventListener("click", startNewSession);
   instructionsButton.addEventListener("click", () => openInstructions(true));
   settingsButton.addEventListener("click", () => openSettings(!settingsDialog.open));

@@ -55,7 +55,7 @@ h2 { font-size: 1.05rem; }
 .stat strong { display: block; margin-top: 3px; color: var(--yellow); font-size: 1.4rem; }
 .board-wrap { min-width: 0; }
 .canvas-frame { position: relative; overflow: hidden; border: 3px solid #302a76; border-radius: 13px; background: #05050d; box-shadow: 0 0 0 1px rgba(255, 216, 77, .14), 0 18px 55px rgba(0, 0, 0, .45); }
-canvas { display: block; width: 100%; height: auto; touch-action: none; }
+canvas { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .pause-overlay { position: absolute; inset: 0; display: grid; place-content: center; gap: 8px; text-align: center; background: rgba(5,5,13,.82); font-size: 1.5rem; }
 .pause-overlay span { color: var(--muted); font-size: .85rem; }
 .help-text { color: var(--muted); font-size: .75rem; line-height: 1.45; }
