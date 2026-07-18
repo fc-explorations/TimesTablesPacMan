@@ -441,14 +441,12 @@
   function regenerateMaze() {
     const previousPlayer = { ...player };
     const previousSignature = mazeSignature(maze);
-    let nextMaze;
-    do {
-      nextMaze = createMaze();
-    } while (mazeSignature(nextMaze) === previousSignature);
+    const levelTransition = game.mazeTransition?.phase === "out" ? game.mazeTransition : null;
+    const nextMaze = levelTransition?.toMaze || createDifferentMaze(previousSignature);
     maze = nextMaze;
-    if (game.mazeTransition?.phase === "out") {
-      game.mazeTransition = { phase: "in", started: game.elapsed, until: game.elapsed + settings.feedbackDuration };
-    }
+    game.mazeTransition = levelTransition
+      ? { ...levelTransition, phase: "in", started: game.elapsed, until: game.elapsed + settings.feedbackDuration }
+      : null;
     openTiles = getOpenTiles();
     game.superStrengthUntil = 0;
     game.teleportCooldownUntil = 0;
@@ -463,6 +461,14 @@
     restorePlayerAfterMaze(previousPlayer);
     ghosts.forEach((ghost) => Object.assign(ghost, makeGhost(ghost.name, ghost.color, ghost.homeX, ghost.homeY, "left", ghost.delay)));
     game.powerPellets.forEach((pellet) => { pellet.active = true; });
+  }
+
+  function createDifferentMaze(previousSignature) {
+    let nextMaze;
+    do {
+      nextMaze = createMaze();
+    } while (mazeSignature(nextMaze) === previousSignature);
+    return nextMaze;
   }
 
   function restorePlayerAfterMaze(previousPlayer) {
@@ -630,7 +636,8 @@
     if (game.correctAnswers < answersPerLevel) return false;
     game.correctAnswers = 0;
     game.level += 1;
-    game.mazeTransition = { phase: "out", started: game.elapsed, until: game.elapsed + settings.feedbackDuration };
+    const fromMaze = maze.map((row) => row.slice());
+    game.mazeTransition = { phase: "out", started: game.elapsed, until: game.elapsed + settings.feedbackDuration, fromMaze, toMaze: createDifferentMaze(mazeSignature(maze)) };
     setupLevelPowerUps();
     return true;
   }
@@ -825,23 +832,36 @@
   }
 
   function drawMaze() {
-    let mazeAlpha = 1;
-    if (game.mazeTransition) {
-      const progress = settings.reducedMotion ? 1 : clamp((game.elapsed - game.mazeTransition.started) / (game.mazeTransition.until - game.mazeTransition.started), 0, 1);
-      mazeAlpha = game.mazeTransition.phase === "out" ? 1 - progress : progress;
-    }
     ctx.save();
-    ctx.globalAlpha = mazeAlpha;
     const wallInset = 1;
     ctx.fillStyle = "#161448";
-    for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (maze[y][x] === "#") ctx.fillRect(x * TILE + wallInset, y * TILE + wallInset, TILE - wallInset * 2, TILE - wallInset * 2);
+    for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (maze[y][x] === "#") {
+      const alpha = mazeWallAlpha(x, y);
+      if (alpha <= 0) continue;
+      ctx.globalAlpha = alpha;
+      ctx.fillRect(x * TILE + wallInset, y * TILE + wallInset, TILE - wallInset * 2, TILE - wallInset * 2);
+    }
     ctx.strokeStyle = "#4b52db"; ctx.lineWidth = 1.5;
     for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (maze[y][x] === "#") {
+      const alpha = mazeWallAlpha(x, y);
+      if (alpha <= 0) continue;
+      ctx.globalAlpha = alpha;
       const px = x * TILE, py = y * TILE;
       if (isOpen(x + 1, y)) { ctx.beginPath(); ctx.moveTo(px + TILE - wallInset, py + wallInset); ctx.lineTo(px + TILE - wallInset, py + TILE - wallInset); ctx.stroke(); }
       if (isOpen(x, y + 1)) { ctx.beginPath(); ctx.moveTo(px + wallInset, py + TILE - wallInset); ctx.lineTo(px + TILE - wallInset, py + TILE - wallInset); ctx.stroke(); }
     }
     ctx.restore();
+  }
+
+  function mazeWallAlpha(x, y) {
+    const transition = game.mazeTransition;
+    if (!transition) return 1;
+    const fromWall = transition.fromMaze?.[y]?.[x] === "#";
+    const toWall = transition.toMaze?.[y]?.[x] === "#";
+    if (fromWall && toWall) return 1;
+    const progress = settings.reducedMotion ? 1 : clamp((game.elapsed - transition.started) / (transition.until - transition.started), 0, 1);
+    if (transition.phase === "out") return fromWall ? 1 - progress : 0;
+    return toWall ? progress : 0;
   }
 
   function drawTargets() {
@@ -1099,7 +1119,7 @@
   }
 
   function startNewSession() {
-    game.score = 0; game.combo = 0; game.level = 1; game.correctAnswers = 0; game.paused = false; game.started = false; game.frightenedUntil = 0; game.superStrengthUntil = 0; game.teleportCooldownUntil = 0; game.hitStarted = 0; game.respawnAt = 0; game.modeElapsed = 0; game.elapsed = 0; game.powerPellets.forEach((pellet) => pellet.active = true);
+    game.score = 0; game.combo = 0; game.level = 1; game.correctAnswers = 0; game.paused = false; game.started = false; game.frightenedUntil = 0; game.superStrengthUntil = 0; game.teleportCooldownUntil = 0; game.hitStarted = 0; game.respawnAt = 0; game.modeElapsed = 0; game.elapsed = 0; game.mazeTransition = null; game.powerPellets.forEach((pellet) => pellet.active = true);
     nextQuestion();
     statusText.textContent = "Choose a direction to begin.";
     updateUI();
