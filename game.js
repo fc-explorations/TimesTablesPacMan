@@ -38,12 +38,12 @@
   const STORAGE_KEY = "times-table-pacman-settings";
 
   const settings = loadSettings();
-  const maze = createMaze();
+  let maze = createMaze();
   const spawn = { x: 13.5, y: 23.5 };
   const ghostHome = { x: 13.5, y: 15.5 };
   const scatterCorners = [{ x: 2, y: 2 }, { x: 25, y: 2 }, { x: 2, y: 27 }, { x: 25, y: 27 }];
   const powerPelletSpots = [{ x: 2, y: 3 }, { x: 25, y: 3 }, { x: 2, y: 27 }, { x: 25, y: 27 }];
-  const openTiles = getOpenTiles();
+  let openTiles = getOpenTiles();
 
   const game = {
     score: 0,
@@ -96,7 +96,7 @@
   function createMaze() {
     // A compact 14×15 blueprint is expanded into 2×2 open blocks. This keeps
     // every regular corridor two cells wide while preserving a classic maze silhouette.
-    const blueprint = [
+    const baseBlueprint = [
       "##############",
       "#............#",
       "#.###.##.###.#",
@@ -113,6 +113,23 @@
       "#............#",
       "##############"
     ];
+    const bridgeCandidates = [];
+    for (let y = 1; y < baseBlueprint.length - 1; y++) for (let x = 1; x < baseBlueprint[y].length - 1; x++) {
+      if (baseBlueprint[y][x] !== "#") continue;
+      const horizontalBridge = baseBlueprint[y][x - 1] === "." && baseBlueprint[y][x + 1] === ".";
+      const verticalBridge = baseBlueprint[y - 1][x] === "." && baseBlueprint[y + 1][x] === ".";
+      if (horizontalBridge || verticalBridge) bridgeCandidates.push([x, y]);
+    }
+    bridgeCandidates.sort(() => Math.random() - .5);
+    bridgeCandidates.slice(0, randomInt(1, Math.min(3, bridgeCandidates.length))).forEach(([x, y]) => {
+      baseBlueprint[y] = `${baseBlueprint[y].slice(0, x)}.${baseBlueprint[y].slice(x + 1)}`;
+    });
+    const flipX = Math.random() < .5;
+    const flipY = Math.random() < .5;
+    const blueprint = baseBlueprint.map((_, y) => {
+      const sourceRow = baseBlueprint[flipY ? baseBlueprint.length - 1 - y : y];
+      return flipX ? sourceRow.split("").reverse().join("") : sourceRow;
+    });
     // Close the few tempting-looking branch pockets so every lane belongs to a loop.
     [[11, 5], [11, 7], [4, 6], [11, 9]].forEach(([x, y]) => {
       blueprint[y] = `${blueprint[y].slice(0, x)}.${blueprint[y].slice(x + 1)}`;
@@ -172,13 +189,39 @@
     grid[ROWS - 1].fill("#");
     grid[0][13] = "."; grid[0][14] = ".";
     grid[ROWS - 1][13] = "."; grid[ROWS - 1][14] = ".";
-    return grid;
+    return isMazeSolvable(grid) ? grid : createMaze();
+  }
+
+  function isMazeSolvable(grid) {
+    const open = (x, y) => grid[(y + ROWS) % ROWS][(x + COLS) % COLS] !== "#";
+    if (!open(13, 23)) return false;
+    const seen = new Set(["13,23"]);
+    const queue = [[13, 23]];
+    while (queue.length) {
+      const [x, y] = queue.shift();
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = (x + dx + COLS) % COLS;
+        const ny = (y + dy + ROWS) % ROWS;
+        const key = `${nx},${ny}`;
+        if (open(nx, ny) && !seen.has(key)) { seen.add(key); queue.push([nx, ny]); }
+      }
+    }
+    let openCount = 0;
+    for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (open(x, y)) {
+      openCount++;
+      const neighbors = [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(([dx, dy]) => open(x + dx, y + dy)).length;
+      if (neighbors === 1) return false;
+    }
+    return seen.size === openCount;
   }
 
   function getOpenTiles() {
     const tiles = [];
     for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (maze[y][x] !== "#") tiles.push({ x, y });
-    return tiles.filter((tile) => Math.hypot(tile.x + .5 - spawn.x, tile.y + .5 - spawn.y) > 4 && Math.hypot(tile.x + .5 - ghostHome.x, tile.y + .5 - ghostHome.y) > 2);
+    return tiles.filter((tile) => {
+      const inGhostHouse = tile.x >= 10 && tile.x <= 17 && tile.y >= 12 && tile.y <= 18;
+      return !inGhostHouse && Math.hypot(tile.x + .5 - spawn.x, tile.y + .5 - spawn.y) > 4 && Math.hypot(tile.x + .5 - ghostHome.x, tile.y + .5 - ghostHome.y) > 2;
+    });
   }
 
   function makePlayer() {
@@ -233,17 +276,48 @@
     candidates.sort(() => Math.random() - .5);
     const targetCount = clamp(Math.round(Number(settings.distractorCount) || 4) + 1, 2, 9);
     for (const value of candidates) if (values.size < targetCount) values.add(value);
-    const positions = openTiles.filter((tile) => !powerPelletSpots.some((pellet) => pellet.x === tile.x && pellet.y === tile.y)).sort(() => Math.random() - .5).slice(0, values.size);
+    const positions = chooseSpreadPositions(values.size);
     return [...values].map((value, index) => ({ ...positions[index], value, correct: value === question.answer, state: "normal" }));
   }
 
+  function chooseSpreadPositions(count) {
+    const candidates = openTiles.filter((tile) => !powerPelletSpots.some((pellet) => pellet.x === tile.x && pellet.y === tile.y));
+    const bucketColumns = 3;
+    const bucketRows = 4;
+    const buckets = Array.from({ length: bucketColumns * bucketRows }, () => []);
+    candidates.forEach((tile) => {
+      const column = Math.min(bucketColumns - 1, Math.floor(tile.x / COLS * bucketColumns));
+      const row = Math.min(bucketRows - 1, Math.floor(tile.y / ROWS * bucketRows));
+      buckets[row * bucketColumns + column].push(tile);
+    });
+    const usableBuckets = buckets.filter((bucket) => bucket.length).sort(() => Math.random() - .5);
+    const positions = [];
+    for (let index = 0; index < count; index++) {
+      const bucket = usableBuckets[index % usableBuckets.length] || candidates;
+      const spaced = bucket.filter((tile) => positions.every((chosen) => Math.hypot(tile.x - chosen.x, tile.y - chosen.y) >= 4));
+      const unused = (spaced.length ? spaced : bucket).filter((tile) => !positions.some((chosen) => chosen.x === tile.x && chosen.y === tile.y));
+      const pool = unused.length ? unused : (spaced.length ? spaced : bucket);
+      positions.push(pool[randomInt(0, pool.length - 1)]);
+    }
+    return positions;
+  }
+
   function nextQuestion() {
+    regenerateMaze();
     game.question = getQuestion();
     game.targets = makeTargets(game.question);
     questionText.textContent = game.question.text;
     questionText.className = "question";
     game.feedback = null;
     updateUI();
+  }
+
+  function regenerateMaze() {
+    maze = createMaze();
+    openTiles = getOpenTiles();
+    Object.assign(player, makePlayer());
+    ghosts.forEach((ghost) => Object.assign(ghost, makeGhost(ghost.name, ghost.color, ghost.homeX, ghost.homeY, "left", ghost.delay)));
+    game.powerPellets.forEach((pellet) => { pellet.active = true; });
   }
 
   function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
@@ -536,8 +610,6 @@
 
   function startNewSession() {
     game.score = 0; game.combo = 0; game.paused = false; game.started = false; game.frightenedUntil = 0; game.hitStarted = 0; game.respawnAt = 0; game.modeElapsed = 0; game.elapsed = 0; game.powerPellets.forEach((pellet) => pellet.active = true);
-    Object.assign(player, makePlayer());
-    ghosts.forEach((ghost) => Object.assign(ghost, makeGhost(ghost.name, ghost.color, ghost.homeX, ghost.homeY, "left", ghost.delay)));
     nextQuestion();
     statusText.textContent = "Choose a direction to begin.";
     updateUI();
