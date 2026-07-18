@@ -25,7 +25,7 @@ button { cursor: pointer; }
 .topbar, .brand, .header-actions, .settings-heading, .settings-actions, .legend-row, .footer { display: flex; align-items: center; }
 .topbar { justify-content: space-between; gap: 24px; margin-bottom: 26px; }
 .brand { gap: 15px; }
-.brand-mark { display: block; width: 54px; height: 54px; flex: 0 0 54px; border-radius: 50%; background: conic-gradient(from -28deg, var(--yellow) 0 304deg, transparent 304deg 360deg); filter: drop-shadow(0 0 14px rgba(255, 216, 77, .62)); }
+.brand-mark { display: block; width: 54px; height: 54px; flex: 0 0 54px; border-radius: 50%; background: conic-gradient(from 60deg, transparent 0 60deg, var(--yellow) 60deg 360deg); filter: drop-shadow(0 0 14px rgba(255, 216, 77, .62)); }
 h1, h2, p { margin: 0; }
 h1 { font-size: clamp(1.45rem, 2.8vw, 2.1rem); letter-spacing: -.045em; text-shadow: 0 0 24px rgba(255,255,255,.12); }
 h2 { font-size: 1.05rem; }
