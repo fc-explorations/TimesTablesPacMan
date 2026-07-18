@@ -12,6 +12,7 @@
   const scoreEl = document.querySelector("#score");
   const comboEl = document.querySelector("#combo");
   const bestScoreEl = document.querySelector("#best-score");
+  const levelEl = document.querySelector("#level");
   const pauseOverlay = document.querySelector("#pause-overlay");
   const restartButton = document.querySelector("#restart-button");
   const instructionsButton = document.querySelector("#instructions-button");
@@ -24,6 +25,7 @@
   const minFactorInput = document.querySelector("#min-factor");
   const maxFactorInput = document.querySelector("#max-factor");
   const distractorCountInput = document.querySelector("#distractor-count");
+  const levelPointDeltaInput = document.querySelector("#level-point-delta");
   const feedbackInput = document.querySelector("#feedback-duration");
   const reducedMotionInput = document.querySelector("#reduced-motion");
 
@@ -52,12 +54,18 @@
     score: 0,
     combo: 0,
     best: Number(localStorage.getItem("times-table-pacman-best") || 0),
+    level: 1,
+    levelProgress: 0,
     paused: false,
     started: false,
     feedback: null,
     question: null,
     targets: [],
     powerPellets: powerPelletSpots.map((spot) => ({ ...spot, kind: "pellet", active: true })),
+    teleporters: [],
+    superPowerUp: null,
+    superStrengthUntil: 0,
+    teleportCooldownUntil: 0,
     frightenedUntil: 0,
     hitStarted: 0,
     respawnAt: 0,
@@ -81,7 +89,7 @@
   ];
 
   function defaultSettings() {
-    return { minFactor: 2, maxFactor: 12, distractorCount: 8, feedbackDuration: 2, reducedMotion: false };
+    return { minFactor: 2, maxFactor: 12, distractorCount: 8, levelPointDelta: 500, feedbackDuration: 2, reducedMotion: false };
   }
 
   function loadSettings() {
@@ -297,7 +305,20 @@
   function canMove(entity, direction) {
     const d = DIRECTIONS[direction];
     const tile = centerTile(entity);
+    if (entity === player && game.superStrengthUntil > game.elapsed) return true;
     return isOpen(tile.x + d.x, tile.y + d.y);
+  }
+
+  function eraseWallInDirection(direction) {
+    if (game.superStrengthUntil <= game.elapsed) return;
+    const d = DIRECTIONS[direction];
+    const tile = centerTile(player);
+    const x = (tile.x + d.x + COLS) % COLS;
+    const y = (tile.y + d.y + ROWS) % ROWS;
+    if (maze[y][x] === "#") {
+      maze[y][x] = ".";
+      openTiles = getOpenTiles();
+    }
   }
 
   function getQuestion() {
@@ -329,7 +350,7 @@
   }
 
   function chooseSpreadPositions(count) {
-    const candidates = openTiles.filter((tile) => !powerPelletSpots.some((pellet) => pellet.x === tile.x && pellet.y === tile.y));
+    const candidates = openTiles.filter((tile) => !isPowerUpTile(tile));
     const bucketColumns = 3;
     const bucketRows = 4;
     const buckets = Array.from({ length: bucketColumns * bucketRows }, () => []);
@@ -349,6 +370,36 @@
       positions.push(pool[randomInt(0, pool.length - 1)]);
     }
     return positions;
+  }
+
+  function isPowerUpTile(tile) {
+    if (powerPelletSpots.some((spot) => spot.x === tile.x && spot.y === tile.y)) return true;
+    if (game.teleporters.some((spot) => spot.x === tile.x && spot.y === tile.y)) return true;
+    if (game.superPowerUp && game.superPowerUp.x === tile.x && game.superPowerUp.y === tile.y) return true;
+    return game.targets.some((target) => target.x === tile.x && target.y === tile.y);
+  }
+
+  function chooseSpecialPositions(count, minimumDistance) {
+    const candidates = openTiles.filter((tile) => !isPowerUpTile(tile)).sort(() => Math.random() - .5);
+    const positions = [];
+    for (const tile of candidates) {
+      if (positions.every((chosen) => Math.hypot(tile.x - chosen.x, tile.y - chosen.y) >= minimumDistance)) positions.push(tile);
+      if (positions.length === count) break;
+    }
+    return positions;
+  }
+
+  function setupLevelPowerUps() {
+    game.teleporters = [];
+    game.superPowerUp = null;
+    if (game.level >= 2) {
+      const spots = chooseSpecialPositions(2, 10);
+      game.teleporters = spots.map((spot, index) => ({ ...spot, id: index }));
+    }
+    if (game.level >= 3) {
+      const [spot] = chooseSpecialPositions(1, 6);
+      if (spot) game.superPowerUp = { ...spot, active: true };
+    }
   }
 
   function nextQuestion() {
@@ -371,6 +422,9 @@
     } while (mazeSignature(nextMaze) === previousSignature);
     maze = nextMaze;
     openTiles = getOpenTiles();
+    game.superStrengthUntil = 0;
+    game.teleportCooldownUntil = 0;
+    setupLevelPowerUps();
     Object.assign(player, makePlayer());
     ghosts.forEach((ghost) => Object.assign(ghost, makeGhost(ghost.name, ghost.color, ghost.homeX, ghost.homeY, "left", ghost.delay)));
     game.powerPellets.forEach((pellet) => { pellet.active = true; });
@@ -405,6 +459,7 @@
       if (!canMove(player, player.dir)) return checkPlayerTargets();
     }
     const d = DIRECTIONS[player.dir];
+    eraseWallInDirection(player.dir);
     player.x += d.x * player.speed * dt;
     player.y += d.y * player.speed * dt;
     if (player.x < 0) player.x = COLS;
@@ -421,17 +476,55 @@
     if (target) { evaluateTarget(target); return; }
     const pellet = game.powerPellets.find((item) => item.active && distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
     if (pellet) evaluatePowerPellet(pellet);
+    const teleporter = game.teleporters.find((item) => distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
+    if (teleporter && game.elapsed >= game.teleportCooldownUntil) { activateTeleporter(teleporter); return; }
+    const superPowerUp = game.superPowerUp;
+    if (superPowerUp?.active && distance(player, { x: superPowerUp.x + .5, y: superPowerUp.y + .5 }) < .45) activateSuperStrength(superPowerUp);
+  }
+
+  function activateTeleporter(teleporter) {
+    const destinations = game.teleporters.filter((item) => item.id !== teleporter.id);
+    if (!destinations.length) return;
+    const destination = destinations[randomInt(0, destinations.length - 1)];
+    player.x = destination.x + .5;
+    player.y = destination.y + .5;
+    game.teleportCooldownUntil = game.elapsed + .6;
+    statusText.textContent = "Teleported!";
+  }
+
+  function activateSuperStrength(powerUp) {
+    powerUp.active = false;
+    game.superStrengthUntil = game.elapsed + 8;
+    statusText.textContent = "Super strength! Walls can be broken for 8 seconds.";
+  }
+
+  function levelPointDelta() { return clamp(Math.round(Number(settings.levelPointDelta) || 500), 100, 5000); }
+
+  function addScore(points) {
+    game.score += points;
+    game.best = Math.max(game.best, game.score);
+    localStorage.setItem("times-table-pacman-best", String(game.best));
+    if (points <= 0) return false;
+    game.levelProgress += points;
+    let leveledUp = false;
+    while (game.levelProgress >= levelPointDelta()) {
+      game.levelProgress -= levelPointDelta();
+      game.level += 1;
+      leveledUp = true;
+    }
+    if (leveledUp) setupLevelPowerUps();
+    return leveledUp;
   }
 
   function evaluateTarget(target) {
     if (target.correct) {
       target.state = "correct";
-      game.score += 100 + game.combo * 25;
+      const leveledUp = addScore(100 + game.combo * 25);
       game.combo += 1;
       questionText.textContent = completedEquation(game.question, target.value);
       questionText.className = "question answer-good";
       game.feedback = { type: "good", until: game.elapsed + settings.feedbackDuration, started: game.elapsed, question: game.question };
-      statusText.textContent = "Correct!";
+      statusText.textContent = leveledUp ? `Level ${game.level} unlocked!` : "Correct!";
     } else {
       target.state = "wrong";
       game.score = Math.max(0, game.score - 25);
@@ -446,8 +539,6 @@
         questionText.className = "question answer-reveal";
       }, Math.min(1000, settings.feedbackDuration * 500));
     }
-    game.best = Math.max(game.best, game.score);
-    localStorage.setItem("times-table-pacman-best", String(game.best));
     updateUI();
     window.setTimeout(nextQuestion, settings.feedbackDuration * 1000);
   }
@@ -455,8 +546,8 @@
   function evaluatePowerPellet(pellet) {
     pellet.active = false;
     game.frightenedUntil = game.elapsed + 7;
-    game.score += 50;
-    statusText.textContent = "Power pellet! Ghosts are frightened for 7 seconds.";
+    const leveledUp = addScore(50);
+    statusText.textContent = leveledUp ? `Level ${game.level} unlocked!` : "Power pellet! Ghosts are frightened for 7 seconds.";
     updateUI();
     window.setTimeout(() => { pellet.active = true; }, 7000);
   }
@@ -531,7 +622,8 @@
   function handleGhostCollision(ghost) {
     if (ghost.state === "frightened") {
       ghost.eaten = true;
-      game.score += 200;
+      const leveledUp = addScore(200);
+      if (leveledUp) statusText.textContent = `Level ${game.level} unlocked!`;
       updateUI();
       return;
     }
@@ -580,6 +672,8 @@
     ctx.fillRect(0, 0, COLS * TILE, ROWS * TILE);
     drawMaze();
     drawPowerPellets();
+    drawTeleporters();
+    drawSuperPowerUp();
     drawTargets();
     drawPlayer();
     ghosts.forEach(drawGhost);
@@ -653,6 +747,51 @@
     });
   }
 
+  function drawTeleporters() {
+    game.teleporters.forEach((teleporter, index) => {
+      const x = (teleporter.x + .5) * TILE;
+      const y = (teleporter.y + .5) * TILE;
+      const rotation = settings.reducedMotion ? 0 : game.elapsed * 2 + index;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+      ctx.strokeStyle = "#cf76ff";
+      ctx.shadowBlur = 16;
+      ctx.shadowColor = "#9c4dff";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.ellipse(0, 0, 8, 4, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = "#7fd8ff";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.ellipse(0, 0, 4, 8, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  function drawSuperPowerUp() {
+    if (!game.superPowerUp?.active) return;
+    const x = (game.superPowerUp.x + .5) * TILE;
+    const y = (game.superPowerUp.y + .5) * TILE;
+    const rotation = settings.reducedMotion ? 0 : game.elapsed * 1.8;
+    const pulse = settings.reducedMotion ? 1 : .8 + .2 * Math.sin(game.elapsed * 3);
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+    ctx.globalAlpha = pulse;
+    ctx.fillStyle = "#ff72d2";
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = "#ff72d2";
+    ctx.beginPath();
+    for (let point = 0; point < 10; point++) {
+      const radius = point % 2 ? 3.5 : 7;
+      const angle = -Math.PI / 2 + point * Math.PI / 5;
+      const xPoint = Math.cos(angle) * radius;
+      const yPoint = Math.sin(angle) * radius;
+      if (!point) ctx.moveTo(xPoint, yPoint); else ctx.lineTo(xPoint, yPoint);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
   function drawPlayer() {
     const hitAnimating = game.respawnAt > game.elapsed;
     const hitTime = hitAnimating ? game.elapsed - game.hitStarted : 0;
@@ -663,7 +802,10 @@
     ctx.save();
     ctx.translate(x, y);
     if (hitAnimating) ctx.rotate(Math.sin(hitTime * 48) * .18);
-    ctx.fillStyle = "#ffd84d"; ctx.shadowBlur = 12; ctx.shadowColor = "#ffd84d";
+    const superStrength = game.superStrengthUntil > game.elapsed;
+    ctx.fillStyle = superStrength ? "#ff72d2" : "#ffd84d";
+    ctx.shadowBlur = superStrength ? 18 : 12;
+    ctx.shadowColor = superStrength ? "#ff72d2" : "#ffd84d";
     ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, radius, DIRECTIONS[player.dir].angle + mouth, DIRECTIONS[player.dir].angle - mouth + Math.PI * 2); ctx.closePath(); ctx.fill(); ctx.restore();
   }
 
@@ -680,6 +822,7 @@
   }
 
   function updateUI() {
+    levelEl.textContent = String(game.level);
     scoreEl.textContent = String(game.score);
     comboEl.textContent = String(game.combo);
     bestScoreEl.textContent = String(game.best);
@@ -705,14 +848,14 @@
   }
 
   function startNewSession() {
-    game.score = 0; game.combo = 0; game.paused = false; game.started = false; game.frightenedUntil = 0; game.hitStarted = 0; game.respawnAt = 0; game.modeElapsed = 0; game.elapsed = 0; game.powerPellets.forEach((pellet) => pellet.active = true);
+    game.score = 0; game.combo = 0; game.level = 1; game.levelProgress = 0; game.paused = false; game.started = false; game.frightenedUntil = 0; game.superStrengthUntil = 0; game.teleportCooldownUntil = 0; game.hitStarted = 0; game.respawnAt = 0; game.modeElapsed = 0; game.elapsed = 0; game.powerPellets.forEach((pellet) => pellet.active = true);
     nextQuestion();
     statusText.textContent = "Choose a direction to begin.";
     updateUI();
   }
 
   function populateSettings() {
-    minFactorInput.value = settings.minFactor; maxFactorInput.value = settings.maxFactor; distractorCountInput.value = settings.distractorCount; feedbackInput.value = settings.feedbackDuration; reducedMotionInput.checked = settings.reducedMotion;
+    minFactorInput.value = settings.minFactor; maxFactorInput.value = settings.maxFactor; distractorCountInput.value = settings.distractorCount; levelPointDeltaInput.value = settings.levelPointDelta; feedbackInput.value = settings.feedbackDuration; reducedMotionInput.checked = settings.reducedMotion;
   }
 
   function openSettings(open) {
@@ -756,7 +899,7 @@
     event.preventDefault();
     const min = clamp(Math.round(Number(minFactorInput.value) || 2), 1, 20);
     const max = clamp(Math.round(Number(maxFactorInput.value) || 12), min, 20);
-    settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 8), 1, 8); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
+    settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 8), 1, 8); settings.levelPointDelta = clamp(Math.round((Number(levelPointDeltaInput.value) || 500) / 50) * 50, 100, 5000); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
     saveSettings(); openSettings(false); nextQuestion(); statusText.textContent = "Settings saved.";
   }
 

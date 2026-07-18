@@ -87,7 +87,7 @@ input[type="number"] { width: 100%; padding: 10px; border: 1px solid var(--line)
   .question-panel .countdown-wrap { grid-column: 2; grid-row: 2; margin-top: 0; }
   .question-panel.with-countdown .question { grid-column: 1; }
   .question { font-size: clamp(1.75rem, 6vw, 2.6rem); }
-  .score-panel { grid-template-columns: repeat(3, 1fr); }
+  .score-panel { grid-template-columns: repeat(4, 1fr); }
   .side-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .score-panel { grid-column: 1 / -1; }
 }
@@ -102,7 +102,7 @@ input[type="number"] { width: 100%; padding: 10px; border: 1px solid var(--line)
   .header-actions { flex-wrap: wrap; justify-content: flex-end; }
   .header-actions .button { padding: 8px 10px; font-size: .78rem; }
   .brand-mark { width: 32px; height: 32px; font-size: 17px; }
-  .score-panel { grid-template-columns: repeat(3, 1fr); }
+  .score-panel { grid-template-columns: repeat(2, 1fr); }
   .settings-grid { grid-template-columns: 1fr 1fr; }
   .footer { align-items: flex-start; flex-direction: column; gap: 5px; }
 }

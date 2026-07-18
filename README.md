@@ -10,9 +10,17 @@ The game is a lightweight static site built with vanilla HTML, CSS, and JavaScri
 2. Use Pac-Man to run over the matching orange number.
 3. Avoid distractors, ghosts, and walls while choosing your route.
 4. Correct answers increase your score and combo. Wrong answers reveal the correct equation and reset the combo.
-5. Run over a power pellet to frighten the ghosts temporarily.
+5. Run over a rotating blue orb to frighten the ghosts temporarily.
 
 The session is endless. A new validated maze and a new set of number targets are generated for every question.
+
+## Levels and power-ups
+
+Positive score advances the level after the configured points-per-level threshold. Score penalties do not lower the current level.
+
+- **Level 1:** rotating blue orbs frighten ghosts and make them eatable.
+- **Level 2:** paired teleporters send Pac-Man to the other portal.
+- **Level 3:** a temporary super-strength star lets Pac-Man erase maze walls, including the wrapped boundary walls.
 
 ## Controls
 
@@ -32,6 +40,7 @@ The Settings dialog lets you choose:
 
 - Minimum and maximum multiplication factors
 - Number of distractors, from 1 to 8
+- Points required to advance a level
 - Feedback duration
 - Reduced-motion mode
 
