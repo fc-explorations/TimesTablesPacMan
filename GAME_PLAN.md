@@ -22,7 +22,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Level 1 includes rotating blue orbs that trigger frightened-ghost mode.
 - Level 2 unlocks paired teleporters that send Pac-Man to the other portal.
 - Level 3 unlocks a temporary super-strength star that lets Pac-Man erase wall blocks, including wrapped boundary blocks.
-- Levels advance after a configurable positive-score delta; penalties never reduce the current level.
+- Levels advance after a configurable number of correct answers; wrong answers and penalties never reduce the current level.
 - Ghost collisions reset Pac-Man and combo, but endless practice continues.
 - After a normal ghost collision, Pac-Man jiggles briefly before respawning at the start tile.
 - After capture, ghosts return to the central rectangle and release one by one on staggered timers.
@@ -35,7 +35,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - `game.js` owns the game loop, maze, entities, questions, targets, scoring, ghost state machine, input, and local persistence.
 - The maze and entities are rendered on one canvas. Question, feedback, settings, and status text remain semantic HTML.
 - Settings persisted in `localStorage`: factor minimum, factor maximum, feedback duration, and reduced-motion preference.
-- Settings also persist the points required to advance each level.
+- Settings also persist the number of correct answers required to advance each level.
 - Game speed is persisted as a shared multiplier for Pac-Man and every ghost state.
 - Players can configure the number of incorrect/confounding numbers shown alongside the correct answer.
 
@@ -58,7 +58,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 
 - Factor range: 2–12.
 - Feedback duration: 2 seconds.
-- Points per level: 500.
+- Correct answers per level: 3.
 - Game speed: 1×.
 - Number targets per question: one correct plus a configurable number of distractors, defaulting to eight.
 - Score and combo are session-only; settings persist locally.

@@ -25,7 +25,7 @@
   const minFactorInput = document.querySelector("#min-factor");
   const maxFactorInput = document.querySelector("#max-factor");
   const distractorCountInput = document.querySelector("#distractor-count");
-  const levelPointDeltaInput = document.querySelector("#level-point-delta");
+  const correctAnswersPerLevelInput = document.querySelector("#correct-answers-per-level");
   const gameSpeedInput = document.querySelector("#game-speed");
   const feedbackInput = document.querySelector("#feedback-duration");
   const reducedMotionInput = document.querySelector("#reduced-motion");
@@ -56,7 +56,7 @@
     combo: 0,
     best: Number(localStorage.getItem("times-table-pacman-best") || 0),
     level: 1,
-    levelProgress: 0,
+    correctAnswers: 0,
     paused: false,
     started: false,
     feedback: null,
@@ -90,7 +90,7 @@
   ];
 
   function defaultSettings() {
-    return { minFactor: 2, maxFactor: 12, distractorCount: 8, levelPointDelta: 500, gameSpeed: 1, feedbackDuration: 2, reducedMotion: false };
+    return { minFactor: 2, maxFactor: 12, distractorCount: 8, correctAnswersPerLevel: 3, gameSpeed: 1, feedbackDuration: 2, reducedMotion: false };
   }
 
   function loadSettings() {
@@ -499,29 +499,29 @@
     statusText.textContent = "Super strength! Walls can be broken for 8 seconds.";
   }
 
-  function levelPointDelta() { return clamp(Math.round(Number(settings.levelPointDelta) || 500), 100, 5000); }
   function speedMultiplier() { return clamp(Number(settings.gameSpeed) || 1, .5, 2); }
 
   function addScore(points) {
     game.score += points;
     game.best = Math.max(game.best, game.score);
     localStorage.setItem("times-table-pacman-best", String(game.best));
-    if (points <= 0) return false;
-    game.levelProgress += points;
-    let leveledUp = false;
-    while (game.levelProgress >= levelPointDelta()) {
-      game.levelProgress -= levelPointDelta();
-      game.level += 1;
-      leveledUp = true;
-    }
-    if (leveledUp) setupLevelPowerUps();
-    return leveledUp;
+  }
+
+  function recordCorrectAnswer() {
+    game.correctAnswers += 1;
+    const answersPerLevel = clamp(Math.round(Number(settings.correctAnswersPerLevel) || 3), 1, 20);
+    if (game.correctAnswers < answersPerLevel) return false;
+    game.correctAnswers = 0;
+    game.level += 1;
+    setupLevelPowerUps();
+    return true;
   }
 
   function evaluateTarget(target) {
     if (target.correct) {
       target.state = "correct";
-      const leveledUp = addScore(100 + game.combo * 25);
+      addScore(100 + game.combo * 25);
+      const leveledUp = recordCorrectAnswer();
       game.combo += 1;
       questionText.textContent = completedEquation(game.question, target.value);
       questionText.className = "question answer-good";
@@ -548,8 +548,8 @@
   function evaluatePowerPellet(pellet) {
     pellet.active = false;
     game.frightenedUntil = game.elapsed + 7;
-    const leveledUp = addScore(50);
-    statusText.textContent = leveledUp ? `Level ${game.level} unlocked!` : "Power pellet! Ghosts are frightened for 7 seconds.";
+    addScore(50);
+    statusText.textContent = "Power pellet! Ghosts are frightened for 7 seconds.";
     updateUI();
     window.setTimeout(() => { pellet.active = true; }, 7000);
   }
@@ -624,8 +624,7 @@
   function handleGhostCollision(ghost) {
     if (ghost.state === "frightened") {
       ghost.eaten = true;
-      const leveledUp = addScore(200);
-      if (leveledUp) statusText.textContent = `Level ${game.level} unlocked!`;
+      addScore(200);
       updateUI();
       return;
     }
@@ -850,14 +849,14 @@
   }
 
   function startNewSession() {
-    game.score = 0; game.combo = 0; game.level = 1; game.levelProgress = 0; game.paused = false; game.started = false; game.frightenedUntil = 0; game.superStrengthUntil = 0; game.teleportCooldownUntil = 0; game.hitStarted = 0; game.respawnAt = 0; game.modeElapsed = 0; game.elapsed = 0; game.powerPellets.forEach((pellet) => pellet.active = true);
+    game.score = 0; game.combo = 0; game.level = 1; game.correctAnswers = 0; game.paused = false; game.started = false; game.frightenedUntil = 0; game.superStrengthUntil = 0; game.teleportCooldownUntil = 0; game.hitStarted = 0; game.respawnAt = 0; game.modeElapsed = 0; game.elapsed = 0; game.powerPellets.forEach((pellet) => pellet.active = true);
     nextQuestion();
     statusText.textContent = "Choose a direction to begin.";
     updateUI();
   }
 
   function populateSettings() {
-    minFactorInput.value = settings.minFactor; maxFactorInput.value = settings.maxFactor; distractorCountInput.value = settings.distractorCount; levelPointDeltaInput.value = settings.levelPointDelta; gameSpeedInput.value = settings.gameSpeed; feedbackInput.value = settings.feedbackDuration; reducedMotionInput.checked = settings.reducedMotion;
+    minFactorInput.value = settings.minFactor; maxFactorInput.value = settings.maxFactor; distractorCountInput.value = settings.distractorCount; correctAnswersPerLevelInput.value = settings.correctAnswersPerLevel; gameSpeedInput.value = settings.gameSpeed; feedbackInput.value = settings.feedbackDuration; reducedMotionInput.checked = settings.reducedMotion;
   }
 
   function openSettings(open) {
@@ -901,7 +900,7 @@
     event.preventDefault();
     const min = clamp(Math.round(Number(minFactorInput.value) || 2), 1, 20);
     const max = clamp(Math.round(Number(maxFactorInput.value) || 12), min, 20);
-    settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 8), 1, 8); settings.levelPointDelta = clamp(Math.round((Number(levelPointDeltaInput.value) || 500) / 50) * 50, 100, 5000); settings.gameSpeed = clamp(Math.round((Number(gameSpeedInput.value) || 1) * 10) / 10, .5, 2); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
+    settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 8), 1, 8); settings.correctAnswersPerLevel = clamp(Math.round(Number(correctAnswersPerLevelInput.value) || 3), 1, 20); settings.gameSpeed = clamp(Math.round((Number(gameSpeedInput.value) || 1) * 10) / 10, .5, 2); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
     saveSettings(); openSettings(false); nextQuestion(); statusText.textContent = "Settings saved.";
   }
 

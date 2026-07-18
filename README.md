@@ -16,7 +16,7 @@ The session is endless. A new validated maze and a new set of number targets are
 
 ## Levels and power-ups
 
-Positive score advances the level after the configured points-per-level threshold. Score penalties do not lower the current level.
+Correct answers advance the level after the configured correct-answer threshold. Wrong answers and score penalties do not lower the current level.
 
 - **Level 1:** rotating blue orbs frighten ghosts and make them eatable.
 - **Level 2:** paired teleporters send Pac-Man to the other portal.
@@ -40,7 +40,7 @@ The Settings dialog lets you choose:
 
 - Minimum and maximum multiplication factors
 - Number of distractors, from 1 to 8
-- Points required to advance a level
+- Correct answers required to advance a level
 - Shared Pac-Man and ghost game speed, from 0.5× to 2×
 - Feedback duration
 - Reduced-motion mode
