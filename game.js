@@ -65,6 +65,8 @@
     touchStart: null
   };
 
+  const GHOST_EXIT_TARGET = { x: 13.5, y: 21.5 };
+
   const player = makePlayer();
   const ghosts = [
     makeGhost("Blinky", "#f34c5e", 13.5, 14.5, "left", 0),
@@ -184,7 +186,7 @@
   }
 
   function makeGhost(name, color, x, y, dir, delay) {
-    return { name, color, x, y, homeX: x, homeY: y, dir, speed: 3.75, delay, state: "scatter", eaten: false, phase: delay, destination: null };
+    return { name, color, x, y, homeX: x, homeY: y, dir, speed: 3.75, delay, state: "scatter", eaten: false, phase: delay, destination: null, releasing: true };
   }
 
   function isOpen(x, y) {
@@ -336,7 +338,7 @@
     }
     ghosts.forEach((ghost, index) => {
       if (ghost.phase > 0) { ghost.phase -= dt; return; }
-      ghost.state = ghost.eaten ? "eyes" : frightened ? "frightened" : game.mode;
+      ghost.state = ghost.eaten ? "eyes" : ghost.releasing ? "exit" : frightened ? "frightened" : game.mode;
       const speed = ghost.state === "frightened" ? 2.1 : ghost.state === "eyes" ? 6 : ghost.speed;
       if (!ghost.destination) {
         ghost.x = Math.floor(ghost.x) + .5;
@@ -351,7 +353,8 @@
         ghost.destination = { x: ghost.x + direction.x, y: ghost.y + direction.y };
       }
       advanceGhost(ghost, speed, dt);
-      if (ghost.state === "eyes" && distance(ghost, ghostHome) < .25) { ghost.eaten = false; ghost.state = game.mode; }
+      if (ghost.releasing && ghost.y >= 19.5 && ghost.x >= 12.5 && ghost.x <= 15.5) ghost.releasing = false;
+      if (ghost.state === "eyes" && distance(ghost, ghostHome) < .25) { ghost.eaten = false; ghost.releasing = true; ghost.state = "exit"; }
       if (distance(player, ghost) < .55) handleGhostCollision(ghost);
     });
   }
@@ -380,6 +383,7 @@
 
   function ghostTarget(ghost, index) {
     if (ghost.state === "eyes") return ghostHome;
+    if (ghost.releasing) return GHOST_EXIT_TARGET;
     if (ghost.state === "scatter") return scatterCorners[index];
     if (ghost.name === "Blinky") return { ...player };
     const direction = DIRECTIONS[player.dir];
@@ -443,13 +447,14 @@
   }
 
   function drawMaze() {
+    const wallInset = 2;
     ctx.fillStyle = "#161448";
-    for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (maze[y][x] === "#") ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+    for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (maze[y][x] === "#") ctx.fillRect(x * TILE + wallInset, y * TILE + wallInset, TILE - wallInset * 2, TILE - wallInset * 2);
     ctx.strokeStyle = "#4b52db"; ctx.lineWidth = 1.5;
     for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (maze[y][x] === "#") {
       const px = x * TILE, py = y * TILE;
-      if (isOpen(x + 1, y)) { ctx.beginPath(); ctx.moveTo(px + TILE, py + 2); ctx.lineTo(px + TILE, py + TILE - 2); ctx.stroke(); }
-      if (isOpen(x, y + 1)) { ctx.beginPath(); ctx.moveTo(px + 2, py + TILE); ctx.lineTo(px + TILE - 2, py + TILE); ctx.stroke(); }
+      if (isOpen(x + 1, y)) { ctx.beginPath(); ctx.moveTo(px + TILE - wallInset, py + wallInset); ctx.lineTo(px + TILE - wallInset, py + TILE - wallInset); ctx.stroke(); }
+      if (isOpen(x, y + 1)) { ctx.beginPath(); ctx.moveTo(px + wallInset, py + TILE - wallInset); ctx.lineTo(px + TILE - wallInset, py + TILE - wallInset); ctx.stroke(); }
     }
   }
 

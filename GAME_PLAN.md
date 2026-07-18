@@ -34,6 +34,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Use a tile grid with horizontal tunnel wrapping.
 - Include a two-cell-wide vertical tunnel with its portals centered on the top and bottom edges; route it around the ghost house.
 - Reserve a central rectangular ghost house with a two-cell gate for ghost origin and respawn.
+- Ghosts use an explicit release route that carries them beyond the house gate before normal targeting begins.
 - Ghosts use Scatter, Chase, Frightened, and Eyes/Respawn states.
 - Blinky targets Pac-Man directly; Pinky targets ahead of Pac-Man; Inky uses a vector based on Blinky and Pac-Man; Clyde alternates between chase and scatter based on distance.
 - Artwork is drawn locally with canvas/CSS and has no external runtime dependencies or copied game assets.
