@@ -16,7 +16,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Targets are kept off the same row and column, with minimum spacing, so they do not form an unavoidable line across a corridor.
 - Number targets are glowing circular amber medallions with bright numerals and small drifting sparkles; feedback changes the full target effect to green, red, or black.
 - Number targets activate immediately when Pac-Man runs over them.
-- For three seconds after each new question, the maze, question, and targets are shown without Pac-Man or ghosts so the player can orient themselves.
+- For the configurable orientation period (five seconds by default) after each new question, the maze, question, targets, and Pac-Man are shown while the ghosts remain hidden. A circular countdown shows when play begins.
 - A correct completed equation turns green, increases score and combo, and causes a new question and target layout.
 - When a correct answer advances the level, only walls removed from the old maze fade to black during feedback; walls present in both layouts stay solid. New walls and all power-up pickups in the regenerated level maze fade from black to their colors over the same duration.
 - A wrong completed equation turns red, then the corrected equation appears in white, reduces score and resets combo, and then causes a new question and target layout.
@@ -63,7 +63,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - `styles.css` provides the responsive layout, classic-inspired presentation, focus states, reduced-motion behavior, and feedback styling.
 - `game.js` owns the game loop, maze, entities, questions, targets, scoring, ghost state machine, input, and local persistence.
 - The maze and entities are rendered on one canvas. Question, feedback, settings, and status text remain semantic HTML.
-- Settings persisted in `localStorage`: factor minimum, factor maximum, feedback duration, and reduced-motion preference.
+- Settings persisted in `localStorage`: selected times table, table-range mode, orientation study time, factor minimum, factor maximum, feedback duration, and reduced-motion preference.
 - Settings also persist the number of correct answers required to advance each level.
 - Game speed is persisted as a shared multiplier for Pac-Man and every ghost state.
 - Players can configure the number of incorrect/confounding numbers shown alongside the correct answer.
@@ -86,6 +86,8 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 ## Defaults
 
 - Factor range: 2–12.
+- Times-table selection: 4 by default, with table-range mode enabled so lower tables are included; disabling it focuses on the selected table only. The selector ranges from 2–9.
+- Orientation study time: 5 seconds by default, shown as a countdown before Pac-Man starts after each new question.
 - Feedback duration: 2 seconds.
 - Correct answers per level: 3.
 - Game speed: 1×.

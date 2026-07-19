@@ -12,7 +12,7 @@ The game is a lightweight static site built with vanilla HTML, CSS, and JavaScri
 4. Correct answers increase your score and combo. Wrong answers reveal the correct equation and reset the combo.
 5. Run over a rotating blue orb to frighten the ghosts temporarily.
 
-Each new question gives you three seconds to study the maze and answer targets before Pac-Man and the ghosts return.
+Each new question gives you five seconds by default to study the maze and answer targets while Pac-Man fades in and the ghosts remain hidden. The study time is configurable in Settings.
 
 The session is endless. A new validated maze and a new set of number targets are generated for every question, while Pac-Man continues from his current position whenever the new layout allows it.
 
@@ -51,6 +51,8 @@ Opening **How to play** or **Settings** pauses the game automatically.
 The Settings dialog lets you choose:
 
 - Minimum and maximum multiplication factors
+- Selected times table from 2 to 9, plus an option to include lower tables
+- Orientation study time before Pac-Man starts, from 1 to 10 seconds
 - Number of distractors, from 1 to 8
 - Correct answers required to advance a level
 - Shared Pac-Man and ghost game speed, from 0.5× to 2×

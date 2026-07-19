@@ -26,6 +26,7 @@
   const instructionsDialog = document.querySelector("#instructions-dialog");
   const closeInstructions = document.querySelector("#close-instructions");
   const settingsForm = document.querySelector("#settings-form");
+  const resetSettingsButton = document.querySelector("#reset-settings");
   const minFactorInput = document.querySelector("#min-factor");
   const maxFactorInput = document.querySelector("#max-factor");
   const distractorCountInput = document.querySelector("#distractor-count");
@@ -33,6 +34,11 @@
   const gameSpeedInput = document.querySelector("#game-speed");
   const feedbackInput = document.querySelector("#feedback-duration");
   const reducedMotionInput = document.querySelector("#reduced-motion");
+  const tableFactorInput = document.querySelector("#table-factor-input");
+  const tableRangeInput = document.querySelector("#table-range");
+  const tableFactorValue = document.querySelector("#table-factor-value");
+  const orientationDurationInput = document.querySelector("#orientation-duration");
+  const orientationDurationValue = document.querySelector("#orientation-duration-value");
   const minFactorValue = document.querySelector("#min-factor-value");
   const maxFactorValue = document.querySelector("#max-factor-value");
   const distractorCountValue = document.querySelector("#distractor-count-value");
@@ -61,7 +67,7 @@
   const powerPelletSpots = [{ x: 2, y: 2 }, { x: 25, y: 2 }, { x: 2, y: 27 }, { x: 25, y: 27 }];
   const POWER_UP_STAGGER = 3;
   const POWER_UP_FADE_DURATION = .65;
-  const ORIENTATION_DURATION = 3;
+  const SPEED_TUNING = .8;
   let openTiles = getOpenTiles();
 
   const game = {
@@ -117,7 +123,7 @@
   ];
 
   function defaultSettings() {
-    return { minFactor: 2, maxFactor: 12, distractorCount: 8, correctAnswersPerLevel: 3, gameSpeed: 1, feedbackDuration: 2, reducedMotion: false };
+    return { minFactor: 2, maxFactor: 12, tableFactor: 4, tableRange: true, orientationDuration: 5, distractorCount: 8, correctAnswersPerLevel: 3, gameSpeed: 1, feedbackDuration: 2, reducedMotion: false };
   }
 
   function loadSettings() {
@@ -309,7 +315,7 @@
   }
 
   function makePlayer() {
-    return { x: spawn.x, y: spawn.y, dir: "left", nextDir: "left", turnQueue: [], speed: 5.2 * speedMultiplier(), mouth: 0 };
+    return { x: spawn.x, y: spawn.y, dir: "left", nextDir: "left", turnQueue: [], speed: 5.2 * speedMultiplier(), mouth: 0, destination: null };
   }
 
   function makeGhost(name, color, x, y, dir, delay) {
@@ -351,9 +357,10 @@
   }
 
   function getQuestion() {
-    const min = Math.max(1, Math.min(20, Math.round(Number(settings.minFactor))));
-    const max = Math.max(min, Math.min(20, Math.round(Number(settings.maxFactor))));
-    const a = randomInt(min, max);
+    const min = Math.max(2, Math.min(12, Math.round(Number(settings.minFactor))));
+    const max = Math.max(min, Math.min(12, Math.round(Number(settings.maxFactor))));
+    const selectedTable = clamp(Math.round(Number(settings.tableFactor) || 4), 2, 9);
+    const a = settings.tableRange ? randomInt(2, selectedTable) : selectedTable;
     const b = randomInt(min, max);
     const missingProduct = Math.random() < .5;
     return missingProduct ? { a, b, answer: a * b, text: `${a} × ${b} = ?`, type: "product" } : { a, b, answer: b, text: `${a} × ? = ${a * b}`, type: "factor" };
@@ -461,8 +468,9 @@
     game.targetReveal = { started: game.elapsed, until: game.elapsed + settings.feedbackDuration };
     questionCountdown.hidden = true;
     questionPanel.classList.remove("with-countdown");
-    game.orientationUntil = game.elapsed + ORIENTATION_DURATION;
-    statusText.textContent = "Orient yourself — Pac-Man starts in 3 seconds.";
+    const studyTime = getOrientationDuration();
+    game.orientationUntil = game.elapsed + studyTime;
+    statusText.textContent = `Orient yourself — Pac-Man starts in ${studyTime} seconds.`;
     updateUI();
   }
 
@@ -568,7 +576,7 @@
   function updatePlayer(dt) {
     if (game.respawnAt > game.elapsed) return;
     if (game.respawnAt && game.elapsed >= game.respawnAt) respawnPlayer();
-    if (tileCenter(player)) {
+    if (!player.destination) {
       player.x = Math.floor(player.x) + .5;
       player.y = Math.floor(player.y) + .5;
       let turned = false;
@@ -585,16 +593,26 @@
         player.turnQueue = [];
       }
       if (!canMove(player, player.dir)) return checkPlayerTargets();
+      eraseWallInDirection(player.dir);
+      const direction = DIRECTIONS[player.dir];
+      player.destination = { x: player.x + direction.x, y: player.y + direction.y };
     }
     const d = DIRECTIONS[player.dir];
-    eraseWallInDirection(player.dir);
     const dashMultiplier = game.elapsed < game.dashUntil ? 1.75 : 1;
-    player.x += d.x * player.speed * dashMultiplier * dt;
-    player.y += d.y * player.speed * dashMultiplier * dt;
-    if (player.x < 0) player.x = COLS;
-    if (player.x > COLS) player.x = 0;
-    if (player.y < 0) player.y = ROWS;
-    if (player.y > ROWS) player.y = 0;
+    const destination = player.destination;
+    const distanceToDestination = Math.abs(d.x ? destination.x - player.x : destination.y - player.y);
+    const step = Math.min(player.speed * dashMultiplier * dt, distanceToDestination);
+    player.x += d.x * step;
+    player.y += d.y * step;
+    if (step >= distanceToDestination) {
+      player.x = destination.x;
+      player.y = destination.y;
+      if (player.x < 0) player.x = COLS - .5;
+      if (player.x >= COLS) player.x = .5;
+      if (player.y < 0) player.y = ROWS - .5;
+      if (player.y >= ROWS) player.y = .5;
+      player.destination = null;
+    }
     player.mouth += dt * 12;
     checkPlayerTargets();
   }
@@ -619,6 +637,7 @@
     const destination = destinations[randomInt(0, destinations.length - 1)];
     player.x = destination.x + .5;
     player.y = destination.y + .5;
+    player.destination = null;
     game.playerTrail = [];
     game.teleportCooldownUntil = game.elapsed + .6;
     statusText.textContent = "Teleported!";
@@ -699,7 +718,8 @@
     decoy.mouth += dt * 12;
   }
 
-  function speedMultiplier() { return clamp(Number(settings.gameSpeed) || 1, .5, 2); }
+  function speedMultiplier() { return clamp(Number(settings.gameSpeed) || 1, .5, 2) * SPEED_TUNING; }
+  function getOrientationDuration() { return clamp(Number(settings.orientationDuration) || 5, 1, 10); }
 
   function addScore(points) {
     game.score += points;
@@ -873,6 +893,7 @@
     player.dir = "left";
     player.nextDir = "left";
     player.turnQueue = [];
+    player.destination = null;
     game.hitStarted = 0;
     game.respawnAt = 0;
     game.playerTrail = [];
@@ -916,7 +937,12 @@
     drawSuperPowerUp();
     drawPowerUps();
     drawTargets();
-    if (game.orientationUntil <= game.elapsed) {
+    if (game.orientationUntil > game.elapsed) {
+      const revealProgress = settings.reducedMotion || !game.targetReveal
+        ? 1
+        : clamp((game.elapsed - game.targetReveal.started) / settings.feedbackDuration, 0, 1);
+      drawPlayer(revealProgress);
+    } else {
       drawPlayerTrail();
       drawPlayer();
       drawDecoy();
@@ -1361,7 +1387,7 @@
     });
   }
 
-  function drawPlayer() {
+  function drawPlayer(alpha = 1) {
     const hitAnimating = game.respawnAt > game.elapsed;
     const hitTime = hitAnimating ? game.elapsed - game.hitStarted : 0;
     const x = (player.x + (hitAnimating ? Math.sin(hitTime * 52) * .12 : 0)) * TILE;
@@ -1373,6 +1399,7 @@
     if (hitAnimating) ctx.rotate(Math.sin(hitTime * 48) * .18);
     const superStrength = game.superStrengthUntil > game.elapsed;
     const dashActive = game.dashUntil > game.elapsed;
+    ctx.globalAlpha = alpha;
     ctx.fillStyle = superStrength ? "#ff72d2" : dashActive ? "#fff1a1" : "#ffd84d";
     ctx.shadowBlur = superStrength ? 18 : dashActive ? 23 : 12;
     ctx.shadowColor = superStrength ? "#ff72d2" : dashActive ? "#ffe66b" : "#ffd84d";
@@ -1413,7 +1440,15 @@
     const progressDots = 10;
     progressDotsEl.innerHTML = Array.from({ length: progressDots }, (_, index) => `<span class="progress-dot${index < Math.round(progressRatio * progressDots) ? " is-active" : ""}></span>`).join("");
     pauseOverlay.hidden = !game.paused;
-    if (game.feedback) {
+    if (game.orientationUntil > game.elapsed) {
+      const remaining = Math.max(0, game.orientationUntil - game.elapsed);
+      const progress = clamp(remaining / getOrientationDuration(), 0, 1);
+      questionCountdown.hidden = false;
+      questionPanel.classList.add("with-countdown");
+      countdownValue.textContent = String(Math.ceil(remaining));
+      countdownRing.style.setProperty("--progress", `${progress * 100}%`);
+      questionCountdown.setAttribute("aria-label", `Game starts in ${Math.ceil(remaining)} seconds`);
+    } else if (game.feedback) {
       const remaining = Math.max(0, game.feedback.until - game.elapsed);
       const progress = clamp(remaining / settings.feedbackDuration, 0, 1);
       questionCountdown.hidden = false;
@@ -1441,10 +1476,13 @@
   }
 
   function formatSettingNumber(value, decimals = 2) {
-    return Number(value).toFixed(decimals).replace(/\.?0+$/, "");
+    const fixed = Number(value).toFixed(decimals);
+    return decimals === 0 ? fixed : fixed.replace(/0+$/, "").replace(/\.$/, "");
   }
 
   function updateSettingValueLabels() {
+    tableFactorValue.textContent = formatSettingNumber(tableFactorInput.value, 0);
+    orientationDurationValue.textContent = `${formatSettingNumber(orientationDurationInput.value, 0)}s`;
     minFactorValue.textContent = formatSettingNumber(minFactorInput.value, 0);
     maxFactorValue.textContent = formatSettingNumber(maxFactorInput.value, 0);
     distractorCountValue.textContent = formatSettingNumber(distractorCountInput.value, 0);
@@ -1459,14 +1497,21 @@
     updateSettingValueLabels();
   }
 
-  function populateSettings() {
-    minFactorInput.value = settings.minFactor;
-    maxFactorInput.value = settings.maxFactor;
-    distractorCountInput.value = settings.distractorCount;
-    correctAnswersPerLevelInput.value = settings.correctAnswersPerLevel;
-    gameSpeedInput.value = settings.gameSpeed;
-    feedbackInput.value = settings.feedbackDuration;
-    reducedMotionInput.checked = settings.reducedMotion;
+  function populateSettings(source = settings) {
+    const tableFactor = clamp(Math.round(Number(source.tableFactor) || 4), 2, 9);
+    const orientationDuration = clamp(Math.round(Number(source.orientationDuration) || 5), 1, 10);
+    const minFactor = clamp(Math.round(Number(source.minFactor) || 2), 2, 12);
+    const maxFactor = clamp(Math.round(Number(source.maxFactor) || 12), minFactor, 12);
+    tableFactorInput.value = tableFactor;
+    orientationDurationInput.value = orientationDuration;
+    tableRangeInput.checked = source.tableRange !== false;
+    minFactorInput.value = minFactor;
+    maxFactorInput.value = maxFactor;
+    distractorCountInput.value = source.distractorCount;
+    correctAnswersPerLevelInput.value = source.correctAnswersPerLevel;
+    gameSpeedInput.value = source.gameSpeed;
+    feedbackInput.value = source.feedbackDuration;
+    reducedMotionInput.checked = source.reducedMotion;
     updateSettingValueLabels();
   }
 
@@ -1492,6 +1537,10 @@
     else { instructionsDialog.hidden = true; restoreModalPause(); }
   }
 
+  function resetSettings() {
+    populateSettings(defaultSettings());
+  }
+
   function pauseForModal() {
     if (modalPauseBeforeOpen === null) modalPauseBeforeOpen = game.paused;
     game.paused = true;
@@ -1509,11 +1558,13 @@
 
   function saveForm(event) {
     event.preventDefault();
-    const min = clamp(Math.round(Number(minFactorInput.value) || 2), 1, 20);
-    const max = clamp(Math.round(Number(maxFactorInput.value) || 12), min, 20);
+    const tableFactor = clamp(Math.round(Number(tableFactorInput.value) || 4), 2, 9);
+    const orientationDuration = clamp(Math.round(Number(orientationDurationInput.value) || 5), 1, 10);
+    const min = clamp(Math.round(Number(minFactorInput.value) || 2), 2, 12);
+    const max = clamp(Math.round(Number(maxFactorInput.value) || 12), min, 12);
     const requestedSpeed = Number(gameSpeedInput.value);
     const gameSpeed = Number.isFinite(requestedSpeed) ? requestedSpeed : 1;
-    settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 8), 1, 8); settings.correctAnswersPerLevel = clamp(Math.round(Number(correctAnswersPerLevelInput.value) || 3), 1, 20); settings.gameSpeed = clamp(gameSpeed, .5, 2); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
+    settings.tableFactor = tableFactor; settings.tableRange = tableRangeInput.checked; settings.orientationDuration = orientationDuration; settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 8), 1, 8); settings.correctAnswersPerLevel = clamp(Math.round(Number(correctAnswersPerLevelInput.value) || 3), 1, 20); settings.gameSpeed = clamp(gameSpeed, .5, 2); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
     saveSettings(); openSettings(false); nextQuestion(); statusText.textContent = "Settings saved.";
   }
 
@@ -1556,7 +1607,8 @@
   settingsDialog.addEventListener("close", () => { settingsButton.setAttribute("aria-expanded", "false"); restoreModalPause(); });
   instructionsDialog.addEventListener("close", restoreModalPause);
   settingsForm.addEventListener("submit", saveForm);
-  [minFactorInput, maxFactorInput, distractorCountInput, correctAnswersPerLevelInput, gameSpeedInput, feedbackInput].forEach((input) => input.addEventListener("input", handleSettingInput));
+  resetSettingsButton.addEventListener("click", resetSettings);
+  [tableFactorInput, orientationDurationInput, minFactorInput, maxFactorInput, distractorCountInput, correctAnswersPerLevelInput, gameSpeedInput, feedbackInput].forEach((input) => input.addEventListener("input", handleSettingInput));
 
   bestScoreEl.textContent = String(game.best);
   nextQuestion();
