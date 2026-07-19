@@ -21,6 +21,7 @@
   const restartButton = document.querySelector("#restart-button");
   const instructionsButton = document.querySelector("#instructions-button");
   const settingsButton = document.querySelector("#settings-button");
+  const touchPad = document.querySelector("#touch-pad");
   const settingsDialog = document.querySelector("#settings-dialog");
   const closeSettings = document.querySelector("#close-settings");
   const instructionsDialog = document.querySelector("#instructions-dialog");
@@ -53,7 +54,7 @@
   const ghostHome = { x: 13.5, y: 15.5 };
   const scatterCorners = [{ x: 2, y: 2 }, { x: 25, y: 2 }, { x: 2, y: 27 }, { x: 25, y: 27 }];
   const powerPelletSpots = [{ x: 2, y: 2 }, { x: 25, y: 2 }, { x: 2, y: 27 }, { x: 25, y: 27 }];
-  const POWER_UP_STAGGER = 2.5;
+  const POWER_UP_STAGGER = 3;
   const POWER_UP_FADE_DURATION = .65;
   let openTiles = getOpenTiles();
 
@@ -594,13 +595,13 @@
     if (game.feedback) return;
     const target = game.targets.find((item) => item.state === "normal" && distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
     if (target) { evaluateTarget(target); return; }
-    const pellet = game.powerPellets.find((item) => item.active && game.elapsed >= item.availableAt && distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
+    const pellet = game.powerPellets.find((item) => item.active && powerUpIsRevealed(item) && distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
     if (pellet) evaluatePowerPellet(pellet);
-    const teleporter = game.teleporters.find((item) => game.elapsed >= item.availableAt && distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
+    const teleporter = game.teleporters.find((item) => powerUpIsRevealed(item) && distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
     if (teleporter && game.elapsed >= game.teleportCooldownUntil) { activateTeleporter(teleporter); return; }
     const superPowerUp = game.superPowerUp;
-    if (superPowerUp?.active && game.elapsed >= superPowerUp.availableAt && distance(player, { x: superPowerUp.x + .5, y: superPowerUp.y + .5 }) < .45) activateSuperStrength(superPowerUp);
-    const powerUp = game.powerUps.find((item) => item.active && game.elapsed >= item.availableAt && distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
+    if (superPowerUp?.active && powerUpIsRevealed(superPowerUp) && distance(player, { x: superPowerUp.x + .5, y: superPowerUp.y + .5 }) < .45) activateSuperStrength(superPowerUp);
+    const powerUp = game.powerUps.find((item) => item.active && powerUpIsRevealed(item) && distance(player, { x: item.x + .5, y: item.y + .5 }) < .45);
     if (powerUp) activatePowerUp(powerUp);
   }
 
@@ -1028,6 +1029,7 @@
     game.powerPellets.forEach((pellet, index) => {
       if (!pellet.active) return;
       const revealAlpha = powerUpRevealAlpha(pellet);
+      if (revealAlpha <= 0) return;
       const x = (pellet.x + .5) * TILE, y = (pellet.y + .5) * TILE;
       const rotation = settings.reducedMotion ? 0 : game.elapsed * 2.6 + index * 1.4;
       const glowPulse = settings.reducedMotion ? .7 : (Math.sin(game.elapsed * Math.PI * 1.2 + index) + 1) / 2;
@@ -1055,6 +1057,7 @@
   function drawTeleporters() {
     game.teleporters.forEach((teleporter, index) => {
       const revealAlpha = powerUpRevealAlpha(teleporter);
+      if (revealAlpha <= 0) return;
       const x = (teleporter.x + .5) * TILE;
       const y = (teleporter.y + .5) * TILE;
       const destination = game.teleporters.find((candidate) => candidate.id !== teleporter.id);
@@ -1089,6 +1092,7 @@
   function drawSuperPowerUp() {
     if (!game.superPowerUp?.active) return;
     const revealAlpha = powerUpRevealAlpha(game.superPowerUp);
+    if (revealAlpha <= 0) return;
     const x = (game.superPowerUp.x + .5) * TILE;
     const y = (game.superPowerUp.y + .5) * TILE;
     const rotation = settings.reducedMotion ? 0 : game.elapsed * 1.8;
@@ -1122,9 +1126,10 @@
     game.powerUps.forEach((powerUp, index) => {
       if (!powerUp.active) return;
       const revealAlpha = powerUpRevealAlpha(powerUp);
+      if (revealAlpha <= 0) return;
       const x = (powerUp.x + .5) * TILE;
       const y = (powerUp.y + .5) * TILE;
-      const rotation = settings.reducedMotion || powerUp.type === "time-warp" ? 0 : game.elapsed * 1.5 + index;
+      const rotation = settings.reducedMotion || powerUp.type === "time-warp" || powerUp.type === "shield" ? 0 : game.elapsed * 1.5 + index;
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(rotation);
@@ -1157,8 +1162,10 @@
       } else if (powerUp.type === "shield") {
         ctx.strokeStyle = "#73e4ff";
         ctx.shadowColor = "#73e4ff";
+        ctx.fillStyle = "rgba(115, 228, 255, .2)";
+        ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(7, -5); ctx.lineTo(6, 3); ctx.quadraticCurveTo(4, 7, 0, 9); ctx.quadraticCurveTo(-4, 7, -6, 3); ctx.lineTo(-7, -5); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = "#73e4ff";
         ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(7, -5); ctx.lineTo(6, 3); ctx.quadraticCurveTo(4, 7, 0, 9); ctx.quadraticCurveTo(-4, 7, -6, 3); ctx.lineTo(-7, -5); ctx.closePath(); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(0, 5); ctx.moveTo(-3, 1); ctx.lineTo(0, 4); ctx.lineTo(3, 1); ctx.stroke();
       } else if (powerUp.type === "ghost-freeze") {
         ctx.strokeStyle = "#b9efff";
         ctx.shadowColor = "#b9efff";
@@ -1237,6 +1244,10 @@
       ? 1
       : clamp((game.elapsed - powerUp.availableAt) / POWER_UP_FADE_DURATION, 0, 1);
     return mazeAlpha * revealProgress;
+  }
+
+  function powerUpIsRevealed(powerUp) {
+    return powerUpRevealAlpha(powerUp) > 0;
   }
 
   function drawDecoy() {
@@ -1498,6 +1509,12 @@
   settingsDialog.addEventListener("close", () => { settingsButton.setAttribute("aria-expanded", "false"); restoreModalPause(); });
   instructionsDialog.addEventListener("close", restoreModalPause);
   settingsForm.addEventListener("submit", saveForm);
+  touchPad.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-direction]");
+    if (!button) return;
+    event.preventDefault();
+    setDirection(button.dataset.direction);
+  });
 
   bestScoreEl.textContent = String(game.best);
   nextQuestion();

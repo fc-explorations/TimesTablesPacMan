@@ -47,6 +47,13 @@
         <div class="board-wrap">
           <div class="canvas-frame">
             <canvas id="game-canvas" width="672" height="720" aria-label="Times Table Pac-Man maze"></canvas>
+            <div class="touch-pad" id="touch-pad" aria-label="Touch directional pad">
+              <button class="touch-pad-button touch-pad-up" type="button" data-direction="up" aria-label="Move up">↑</button>
+              <button class="touch-pad-button touch-pad-left" type="button" data-direction="left" aria-label="Move left">←</button>
+              <span class="touch-pad-center" aria-hidden="true"></span>
+              <button class="touch-pad-button touch-pad-right" type="button" data-direction="right" aria-label="Move right">→</button>
+              <button class="touch-pad-button touch-pad-down" type="button" data-direction="down" aria-label="Move down">↓</button>
+            </div>
             <div class="pause-overlay" id="pause-overlay" hidden>
               <strong>Paused</strong>
               <span>Press P to continue</span>
