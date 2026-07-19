@@ -39,6 +39,8 @@
   const tableFactorValue = document.querySelector("#table-factor-value");
   const orientationDurationInput = document.querySelector("#orientation-duration");
   const orientationDurationValue = document.querySelector("#orientation-duration-value");
+  const powerUpStaggerInput = document.querySelector("#power-up-stagger");
+  const powerUpStaggerValue = document.querySelector("#power-up-stagger-value");
   const minFactorValue = document.querySelector("#min-factor-value");
   const maxFactorValue = document.querySelector("#max-factor-value");
   const distractorCountValue = document.querySelector("#distractor-count-value");
@@ -65,7 +67,6 @@
   const ghostHome = { x: 13.5, y: 15.5 };
   const scatterCorners = [{ x: 2, y: 2 }, { x: 25, y: 2 }, { x: 2, y: 27 }, { x: 25, y: 27 }];
   const powerPelletSpots = [{ x: 2, y: 2 }, { x: 25, y: 2 }, { x: 2, y: 27 }, { x: 25, y: 27 }];
-  const POWER_UP_STAGGER = 3;
   const POWER_UP_FADE_DURATION = .65;
   const SPEED_TUNING = .8;
   let openTiles = getOpenTiles();
@@ -90,6 +91,7 @@
     superStrengthUntil: 0,
     dashUntil: 0,
     teleportCooldownUntil: 0,
+    teleportEffect: null,
     radarUntil: 0,
     shieldActive: false,
     ghostFreezeUntil: 0,
@@ -100,6 +102,7 @@
     dissolvingWalls: [],
     playerTrail: [],
     frightenedUntil: 0,
+    ghostBombEffect: null,
     hitStarted: 0,
     respawnAt: 0,
     powerUpRevealSequence: 0,
@@ -123,7 +126,7 @@
   ];
 
   function defaultSettings() {
-    return { minFactor: 2, maxFactor: 12, tableFactor: 4, tableRange: true, orientationDuration: 5, distractorCount: 5, correctAnswersPerLevel: 3, gameSpeed: 1, feedbackDuration: 2, reducedMotion: false };
+    return { minFactor: 2, maxFactor: 12, tableFactor: 4, tableRange: true, orientationDuration: 5, powerUpStagger: 3, distractorCount: 5, correctAnswersPerLevel: 3, gameSpeed: 1, feedbackDuration: 2, reducedMotion: false };
   }
 
   function loadSettings() {
@@ -453,7 +456,7 @@
   }
 
   function schedulePowerUp(powerUp) {
-    powerUp.availableAt = game.elapsed + game.powerUpRevealSequence * POWER_UP_STAGGER;
+    powerUp.availableAt = game.elapsed + game.powerUpRevealSequence * getPowerUpStagger();
     game.powerUpRevealSequence += 1;
     return powerUp;
   }
@@ -487,9 +490,11 @@
     game.superStrengthUntil = 0;
     game.dashUntil = 0;
     game.teleportCooldownUntil = 0;
+    game.teleportEffect = null;
     game.radarUntil = 0;
     game.shieldActive = false;
     game.ghostFreezeUntil = 0;
+    game.ghostBombEffect = null;
     game.decoy = null;
     game.timeWarpUntil = 0;
     game.secondChanceActive = false;
@@ -576,6 +581,7 @@
   function updatePlayer(dt) {
     if (game.respawnAt > game.elapsed) return;
     if (game.respawnAt && game.elapsed >= game.respawnAt) respawnPlayer();
+    if (game.teleportEffect && game.elapsed < game.teleportEffect.until) return;
     if (!player.destination) {
       player.x = Math.floor(player.x) + .5;
       player.y = Math.floor(player.y) + .5;
@@ -635,11 +641,14 @@
     const destinations = game.teleporters.filter((item) => item.id !== teleporter.id);
     if (!destinations.length) return;
     const destination = destinations[randomInt(0, destinations.length - 1)];
-    player.x = destination.x + .5;
-    player.y = destination.y + .5;
+    const from = { x: player.x, y: player.y };
+    const to = { x: destination.x + .5, y: destination.y + .5 };
+    player.x = to.x;
+    player.y = to.y;
     player.destination = null;
     game.playerTrail = [];
-    game.teleportCooldownUntil = game.elapsed + .6;
+    game.teleportEffect = { from, to, started: game.elapsed, until: game.elapsed + 1 };
+    game.teleportCooldownUntil = game.elapsed + 1.1;
     statusText.textContent = "Teleported!";
   }
 
@@ -674,9 +683,14 @@
       game.dashUntil = game.elapsed + 8;
       statusText.textContent = "Pac-Man Dash active for 8 seconds.";
     } else if (powerUp.type === "ghost-bomb") {
+      game.ghostBombEffect = {
+        started: game.elapsed,
+        until: game.elapsed + 1,
+        ghosts: ghosts.map((ghost) => ({ x: ghost.x, y: ghost.y, color: ghost.color }))
+      };
       resetGhostsAfterCapture();
       game.modeElapsed = 0;
-      statusText.textContent = "Ghost Bomb! The ghosts are respawning one by one.";
+      statusText.textContent = "Ghost Bomb! The ghosts exploded and are respawning one by one.";
     }
   }
 
@@ -720,6 +734,10 @@
 
   function speedMultiplier() { return clamp(Number(settings.gameSpeed) || 1, .5, 2) * SPEED_TUNING; }
   function getOrientationDuration() { return clamp(Number(settings.orientationDuration) || 5, 1, 10); }
+  function getPowerUpStagger() {
+    const requested = Number(settings.powerUpStagger);
+    return clamp(Number.isFinite(requested) ? requested : 3, 0, 6);
+  }
 
   function addScore(points) {
     game.score += points;
@@ -916,6 +934,8 @@
     updatePlayerTrail();
     updateDecoy(dt);
     updateGhosts(dt);
+    if (game.teleportEffect && game.elapsed >= game.teleportEffect.until) game.teleportEffect = null;
+    if (game.ghostBombEffect && game.elapsed >= game.ghostBombEffect.until) game.ghostBombEffect = null;
     if (game.feedback && game.elapsed >= game.feedback.until) game.feedback = null;
     if (game.targetReveal && game.elapsed >= game.targetReveal.until) game.targetReveal = null;
     if (game.mazeTransition?.phase === "in" && game.elapsed >= game.mazeTransition.until) game.mazeTransition = null;
@@ -944,10 +964,12 @@
       drawPlayer(revealProgress);
     } else {
       drawPlayerTrail();
-      drawPlayer();
+      if (game.teleportEffect && game.elapsed < game.teleportEffect.until) drawTeleportEffect();
+      else drawPlayer();
       drawDecoy();
       drawRadarArrow();
-      ghosts.forEach(drawGhost);
+      if (!game.ghostBombEffect || game.elapsed >= game.ghostBombEffect.until) ghosts.forEach(drawGhost);
+      drawGhostBombEffect();
     }
   }
 
@@ -1414,6 +1436,76 @@
     ctx.restore();
   }
 
+  function drawTeleportEffect() {
+    const effect = game.teleportEffect;
+    if (!effect) return;
+    if (settings.reducedMotion) { drawPlayer(); return; }
+    const progress = clamp((game.elapsed - effect.started) / (effect.until - effect.started), 0, 1);
+    for (let echo = 4; echo >= 0; echo--) {
+      const sample = clamp(progress - echo * .085, 0, 1);
+      const x = effect.from.x + (effect.to.x - effect.from.x) * sample;
+      const y = effect.from.y + (effect.to.y - effect.from.y) * sample;
+      const pulse = .35 + .65 * ((Math.sin((game.elapsed - effect.started) * 22 - echo * 1.5) + 1) / 2);
+      const alpha = (echo === 0 ? .9 : .22) * pulse * (1 - sample * .16);
+      drawTeleportPacman(x, y, alpha);
+    }
+  }
+
+  function drawTeleportPacman(x, y, alpha) {
+    const mouth = Math.abs(Math.sin(game.elapsed * 18)) * .25;
+    const radius = TILE * .43;
+    ctx.save();
+    ctx.translate(x * TILE, y * TILE);
+    ctx.rotate(DIRECTIONS[player.dir].angle);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = "#ffd84d";
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = "#ffd84d";
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, radius, mouth, Math.PI * 2 - mouth);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGhostBombEffect() {
+    const effect = game.ghostBombEffect;
+    if (!effect || game.elapsed >= effect.until) return;
+    const progress = clamp((game.elapsed - effect.started) / (effect.until - effect.started), 0, 1);
+    const visualProgress = settings.reducedMotion ? .65 : progress;
+    effect.ghosts.forEach((ghost, index) => {
+      const x = ghost.x * TILE;
+      const y = ghost.y * TILE;
+      const alpha = settings.reducedMotion ? .7 : 1 - progress;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = ghost.color;
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = ghost.color;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(0, 0, 5 + visualProgress * 17, 0, Math.PI * 2);
+      ctx.stroke();
+      for (let shard = 0; shard < 9; shard++) {
+        const angle = shard * Math.PI * 2 / 9 + index * .8;
+        const distanceFromCenter = visualProgress * (8 + (shard % 3) * 7);
+        const shardX = Math.cos(angle) * distanceFromCenter;
+        const shardY = Math.sin(angle) * distanceFromCenter;
+        const size = 1.2 + (shard % 2) * .8;
+        ctx.fillStyle = shard % 3 === 0 ? "#fff3ae" : ghost.color;
+        ctx.fillRect(shardX - size / 2, shardY - size / 2, size, size);
+      }
+      if (progress < .3 || settings.reducedMotion) {
+        ctx.fillStyle = "#fff3ae";
+        ctx.shadowColor = "#fff3ae";
+        ctx.beginPath(); ctx.arc(0, 0, 3 + (1 - progress) * 5, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    });
+  }
+
   function drawGhost(ghost) {
     if (ghost.phase > 0) return;
     const x = ghost.x * TILE, y = ghost.y * TILE, r = TILE * .4;
@@ -1483,6 +1575,7 @@
   function updateSettingValueLabels() {
     tableFactorValue.textContent = formatSettingNumber(tableFactorInput.value, 0);
     orientationDurationValue.textContent = `${formatSettingNumber(orientationDurationInput.value, 0)}s`;
+    powerUpStaggerValue.textContent = `${formatSettingNumber(powerUpStaggerInput.value, 1)}s`;
     minFactorValue.textContent = formatSettingNumber(minFactorInput.value, 0);
     maxFactorValue.textContent = formatSettingNumber(maxFactorInput.value, 0);
     distractorCountValue.textContent = formatSettingNumber(distractorCountInput.value, 0);
@@ -1500,10 +1593,13 @@
   function populateSettings(source = settings) {
     const tableFactor = clamp(Math.round(Number(source.tableFactor) || 4), 2, 9);
     const orientationDuration = clamp(Math.round(Number(source.orientationDuration) || 5), 1, 10);
+    const requestedPowerUpStagger = Number(source.powerUpStagger);
+    const powerUpStagger = clamp(Number.isFinite(requestedPowerUpStagger) ? requestedPowerUpStagger : 3, 0, 6);
     const minFactor = clamp(Math.round(Number(source.minFactor) || 2), 2, 12);
     const maxFactor = clamp(Math.round(Number(source.maxFactor) || 12), minFactor, 12);
     tableFactorInput.value = tableFactor;
     orientationDurationInput.value = orientationDuration;
+    powerUpStaggerInput.value = powerUpStagger;
     tableRangeInput.checked = source.tableRange !== false;
     minFactorInput.value = minFactor;
     maxFactorInput.value = maxFactor;
@@ -1560,11 +1656,12 @@
     event.preventDefault();
     const tableFactor = clamp(Math.round(Number(tableFactorInput.value) || 4), 2, 9);
     const orientationDuration = clamp(Math.round(Number(orientationDurationInput.value) || 5), 1, 10);
+    const powerUpStagger = clamp(Number(powerUpStaggerInput.value), 0, 6);
     const min = clamp(Math.round(Number(minFactorInput.value) || 2), 2, 12);
     const max = clamp(Math.round(Number(maxFactorInput.value) || 12), min, 12);
     const requestedSpeed = Number(gameSpeedInput.value);
     const gameSpeed = Number.isFinite(requestedSpeed) ? requestedSpeed : 1;
-    settings.tableFactor = tableFactor; settings.tableRange = tableRangeInput.checked; settings.orientationDuration = orientationDuration; settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 5), 1, 8); settings.correctAnswersPerLevel = clamp(Math.round(Number(correctAnswersPerLevelInput.value) || 3), 1, 20); settings.gameSpeed = clamp(gameSpeed, .5, 2); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
+    settings.tableFactor = tableFactor; settings.tableRange = tableRangeInput.checked; settings.orientationDuration = orientationDuration; settings.powerUpStagger = Number.isFinite(powerUpStagger) ? powerUpStagger : 3; settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 5), 1, 8); settings.correctAnswersPerLevel = clamp(Math.round(Number(correctAnswersPerLevelInput.value) || 3), 1, 20); settings.gameSpeed = clamp(gameSpeed, .5, 2); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
     saveSettings(); openSettings(false); nextQuestion(); statusText.textContent = "Settings saved.";
   }
 
@@ -1608,7 +1705,7 @@
   instructionsDialog.addEventListener("close", restoreModalPause);
   settingsForm.addEventListener("submit", saveForm);
   resetSettingsButton.addEventListener("click", resetSettings);
-  [tableFactorInput, orientationDurationInput, minFactorInput, maxFactorInput, distractorCountInput, correctAnswersPerLevelInput, gameSpeedInput, feedbackInput].forEach((input) => input.addEventListener("input", handleSettingInput));
+  [tableFactorInput, orientationDurationInput, powerUpStaggerInput, minFactorInput, maxFactorInput, distractorCountInput, correctAnswersPerLevelInput, gameSpeedInput, feedbackInput].forEach((input) => input.addEventListener("input", handleSettingInput));
 
   bestScoreEl.textContent = String(game.best);
   nextQuestion();

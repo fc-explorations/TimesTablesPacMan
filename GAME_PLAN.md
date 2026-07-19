@@ -21,10 +21,10 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - When a correct answer advances the level, only walls removed from the old maze fade to black during feedback; walls present in both layouts stay solid. New walls and all power-up pickups in the regenerated level maze fade from black to their colors over the same duration.
 - A wrong completed equation turns red, then the corrected equation appears in white, reduces score and resets combo, and then causes a new question and target layout.
 - During answer feedback, the non-selected maze numbers fade from orange to black over the configured feedback duration while the selected result remains red or green. The next question's numbers then fade from black back to orange over the same duration.
-- Collectibles in each regenerated maze appear one at a time in a shared reveal sequence, with 2.5 seconds between appearances and a short fade-in; a pickup cannot activate before it appears.
+- Collectibles in each regenerated maze appear one at a time in a shared reveal sequence, with a configurable delay between appearances (3 seconds by default) and a short fade-in; a pickup cannot activate before it appears.
 - Normal dots are removed.
 - Level 1 includes rotating blue orbs that trigger frightened-ghost mode.
-- Level 2 unlocks paired teleporters that send Pac-Man to the other portal.
+- Level 2 unlocks paired teleporters that send Pac-Man to the other portal with a one-second flashing travel animation.
 - Level 3 unlocks a temporary super-strength star that lets Pac-Man erase wall blocks, including wrapped boundary blocks; broken blocks dissolve into drifting pixels before disappearing.
 - Level 4 unlocks Radar, which briefly points toward the correct answer with a green glowing arrow.
 - Level 5 unlocks Shield, which absorbs one ghost collision before being consumed.
@@ -33,7 +33,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Level 8 unlocks Time Warp, which temporarily slows ghost movement.
 - Level 9 unlocks Second Chance, which marks one wrong target red, keeps the current question active, and preserves the combo for another attempt.
 - Level 10 unlocks Pac-Man Dash, which temporarily increases Pac-Man's movement speed without changing ghost speed.
-- Level 11 unlocks Ghost Bomb, which returns every ghost to the central house and releases them one by one on staggered timers.
+- Level 11 unlocks Ghost Bomb, which explodes every ghost visually, then returns them to the central house and releases them one by one on staggered timers.
 - All non-portal power-ups, including orbs and the super-strength star, are consumed when activated; paired teleporters remain reusable.
 - Levels advance after a configurable number of correct answers; wrong answers and penalties never reduce the current level.
 - Ghost collisions reset Pac-Man and combo, but endless practice continues.
@@ -46,7 +46,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 | Icon | Power-up | Effect |
 | --- | --- | --- |
 | Rotating blue orb with a moving surface dot | Frightened orb | Makes ghosts frightened and eatable temporarily. |
-| Glowing isosceles triangle pointing toward its paired triangle | Teleporter | Sends Pac-Man to another portal; portals remain reusable. |
+| Glowing isosceles triangle pointing toward its paired triangle | Teleporter | Sends Pac-Man to another portal with a one-second flashing travel animation; portals remain reusable. |
 | Rotating pink star | Super Strength | Lets Pac-Man erase wall blocks temporarily, including boundary walls. |
 | Green diamond with a right-pointing arrow | Radar | Shows a short green glowing arrow toward the correct answer. |
 | Cyan circle with a cross | Shield | Absorbs one ghost collision. |
@@ -55,7 +55,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 | Gold clock | Time Warp | Slows ghost movement temporarily. |
 | Pink heart | Second Chance | Marks one wrong target red, keeps the question active without revealing the answer, and preserves the combo for another attempt. |
 | Gold arrow with speed lines | Pac-Man Dash | Increases Pac-Man's movement speed temporarily. |
-| Red bomb with a lit fuse | Ghost Bomb | Respawns every ghost in the central house and releases them one by one. |
+| Red bomb with a lit fuse | Ghost Bomb | Explodes every ghost, then respawns them in the central house and releases them one by one. |
 
 ## Technical Design
 
@@ -63,7 +63,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - `styles.css` provides the responsive layout, classic-inspired presentation, focus states, reduced-motion behavior, and feedback styling.
 - `game.js` owns the game loop, maze, entities, questions, targets, scoring, ghost state machine, input, and local persistence.
 - The maze and entities are rendered on one canvas. Question, feedback, settings, and status text remain semantic HTML.
-- Settings persisted in `localStorage`: selected times table, table-range mode, orientation study time, factor minimum, factor maximum, feedback duration, and reduced-motion preference.
+- Settings persisted in `localStorage`: selected times table, table-range mode, orientation study time, power-up reveal delay, factor minimum, factor maximum, feedback duration, and reduced-motion preference.
 - Settings also persist the number of correct answers required to advance each level.
 - Game speed is persisted as a shared multiplier for Pac-Man and every ghost state.
 - Players can configure the number of incorrect/confounding numbers shown alongside the correct answer.
@@ -88,6 +88,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Factor range: 2–12.
 - Times-table selection: 4 by default, with table-range mode enabled so lower tables are included; disabling it focuses on the selected table only. The selector ranges from 2–9.
 - Orientation study time: 5 seconds by default, shown as a countdown before Pac-Man starts after each new question.
+- Power-up reveal delay: 3 seconds by default between staggered power-up appearances.
 - Feedback duration: 2 seconds.
 - Correct answers per level: 3.
 - Game speed: 1×.

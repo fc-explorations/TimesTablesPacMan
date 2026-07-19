@@ -21,7 +21,7 @@ The session is endless. A new validated maze and a new set of number targets are
 Correct answers advance the level after the configured correct-answer threshold. Wrong answers and score penalties do not lower the current level.
 
 - **Level 1:** rotating blue orbs frighten ghosts and make them eatable.
-- **Level 2:** paired teleporters send Pac-Man to the other portal.
+- **Level 2:** paired teleporters send Pac-Man to the other portal with a one-second flashing travel animation.
 - **Level 3:** a temporary super-strength star lets Pac-Man erase maze walls, including the wrapped boundary walls.
 - **Level 4:** Radar briefly shows a green glowing arrow pointing toward the correct number.
 - **Level 5:** Shield absorbs one ghost collision.
@@ -30,7 +30,7 @@ Correct answers advance the level after the configured correct-answer threshold.
 - **Level 8:** Time Warp slows the ghosts temporarily.
 - **Level 9:** Second Chance marks one wrong target red, keeps the question active without revealing the answer, and preserves the combo for another attempt.
 - **Level 10:** Pac-Man Dash temporarily increases Pac-Man's movement speed.
-- **Level 11:** Ghost Bomb sends every ghost back to the central house and releases them one by one.
+- **Level 11:** Ghost Bomb explodes every ghost, then sends them back to the central house and releases them one by one.
 
 All non-portal power-ups disappear after they are consumed, including the blue orbs and super-strength star. Teleporters are the exception and can be used repeatedly.
 
@@ -53,6 +53,7 @@ The Settings dialog lets you choose:
 - Minimum and maximum multiplication factors
 - Selected times table from 2 to 9, plus an option to include lower tables
 - Orientation study time before Pac-Man starts, from 1 to 10 seconds
+- Power-up appearance delay, from 0 to 6 seconds
 - Number of distractors, from 1 to 8
 - Correct answers required to advance a level
 - Shared Pac-Man and ghost game speed, from 0.5× to 2×
