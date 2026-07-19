@@ -21,7 +21,6 @@
   const restartButton = document.querySelector("#restart-button");
   const instructionsButton = document.querySelector("#instructions-button");
   const settingsButton = document.querySelector("#settings-button");
-  const touchPad = document.querySelector("#touch-pad");
   const settingsDialog = document.querySelector("#settings-dialog");
   const closeSettings = document.querySelector("#close-settings");
   const instructionsDialog = document.querySelector("#instructions-dialog");
@@ -34,6 +33,12 @@
   const gameSpeedInput = document.querySelector("#game-speed");
   const feedbackInput = document.querySelector("#feedback-duration");
   const reducedMotionInput = document.querySelector("#reduced-motion");
+  const minFactorValue = document.querySelector("#min-factor-value");
+  const maxFactorValue = document.querySelector("#max-factor-value");
+  const distractorCountValue = document.querySelector("#distractor-count-value");
+  const correctAnswersPerLevelValue = document.querySelector("#correct-answers-per-level-value");
+  const gameSpeedValue = document.querySelector("#game-speed-value");
+  const feedbackValue = document.querySelector("#feedback-duration-value");
 
   const TILE = 24;
   const COLS = 28;
@@ -56,6 +61,7 @@
   const powerPelletSpots = [{ x: 2, y: 2 }, { x: 25, y: 2 }, { x: 2, y: 27 }, { x: 25, y: 27 }];
   const POWER_UP_STAGGER = 3;
   const POWER_UP_FADE_DURATION = .65;
+  const ORIENTATION_DURATION = 3;
   let openTiles = getOpenTiles();
 
   const game = {
@@ -455,6 +461,8 @@
     game.targetReveal = { started: game.elapsed, until: game.elapsed + settings.feedbackDuration };
     questionCountdown.hidden = true;
     questionPanel.classList.remove("with-countdown");
+    game.orientationUntil = game.elapsed + ORIENTATION_DURATION;
+    statusText.textContent = "Orient yourself — Pac-Man starts in 3 seconds.";
     updateUI();
   }
 
@@ -874,6 +882,15 @@
   function update(dt) {
     if (game.paused) return;
     game.elapsed += dt;
+    if (game.orientationUntil > game.elapsed) {
+      game.dissolvingWalls = game.dissolvingWalls.filter((wall) => game.elapsed < wall.until);
+      updateUI();
+      return;
+    }
+    if (game.orientationUntil) {
+      game.orientationUntil = 0;
+      statusText.textContent = game.started ? "Back in the maze." : "Choose a direction to begin.";
+    }
     updatePlayer(dt);
     updatePlayerTrail();
     updateDecoy(dt);
@@ -899,11 +916,13 @@
     drawSuperPowerUp();
     drawPowerUps();
     drawTargets();
-    drawPlayerTrail();
-    drawPlayer();
-    drawDecoy();
-    drawRadarArrow();
-    ghosts.forEach(drawGhost);
+    if (game.orientationUntil <= game.elapsed) {
+      drawPlayerTrail();
+      drawPlayer();
+      drawDecoy();
+      drawRadarArrow();
+      ghosts.forEach(drawGhost);
+    }
   }
 
   function drawMaze() {
@@ -1421,8 +1440,34 @@
     updateUI();
   }
 
+  function formatSettingNumber(value, decimals = 2) {
+    return Number(value).toFixed(decimals).replace(/\.?0+$/, "");
+  }
+
+  function updateSettingValueLabels() {
+    minFactorValue.textContent = formatSettingNumber(minFactorInput.value, 0);
+    maxFactorValue.textContent = formatSettingNumber(maxFactorInput.value, 0);
+    distractorCountValue.textContent = formatSettingNumber(distractorCountInput.value, 0);
+    correctAnswersPerLevelValue.textContent = formatSettingNumber(correctAnswersPerLevelInput.value, 0);
+    gameSpeedValue.textContent = formatSettingNumber(gameSpeedInput.value);
+    feedbackValue.textContent = `${formatSettingNumber(feedbackInput.value, 1)}s`;
+  }
+
+  function handleSettingInput(event) {
+    if (event.target === minFactorInput && Number(minFactorInput.value) > Number(maxFactorInput.value)) maxFactorInput.value = minFactorInput.value;
+    if (event.target === maxFactorInput && Number(maxFactorInput.value) < Number(minFactorInput.value)) minFactorInput.value = maxFactorInput.value;
+    updateSettingValueLabels();
+  }
+
   function populateSettings() {
-    minFactorInput.value = settings.minFactor; maxFactorInput.value = settings.maxFactor; distractorCountInput.value = settings.distractorCount; correctAnswersPerLevelInput.value = settings.correctAnswersPerLevel; gameSpeedInput.value = settings.gameSpeed; feedbackInput.value = settings.feedbackDuration; reducedMotionInput.checked = settings.reducedMotion;
+    minFactorInput.value = settings.minFactor;
+    maxFactorInput.value = settings.maxFactor;
+    distractorCountInput.value = settings.distractorCount;
+    correctAnswersPerLevelInput.value = settings.correctAnswersPerLevel;
+    gameSpeedInput.value = settings.gameSpeed;
+    feedbackInput.value = settings.feedbackDuration;
+    reducedMotionInput.checked = settings.reducedMotion;
+    updateSettingValueLabels();
   }
 
   function openSettings(open) {
@@ -1466,7 +1511,9 @@
     event.preventDefault();
     const min = clamp(Math.round(Number(minFactorInput.value) || 2), 1, 20);
     const max = clamp(Math.round(Number(maxFactorInput.value) || 12), min, 20);
-    settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 8), 1, 8); settings.correctAnswersPerLevel = clamp(Math.round(Number(correctAnswersPerLevelInput.value) || 3), 1, 20); settings.gameSpeed = clamp(Math.round((Number(gameSpeedInput.value) || 1) * 10) / 10, .5, 2); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
+    const requestedSpeed = Number(gameSpeedInput.value);
+    const gameSpeed = Number.isFinite(requestedSpeed) ? requestedSpeed : 1;
+    settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 8), 1, 8); settings.correctAnswersPerLevel = clamp(Math.round(Number(correctAnswersPerLevelInput.value) || 3), 1, 20); settings.gameSpeed = clamp(gameSpeed, .5, 2); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
     saveSettings(); openSettings(false); nextQuestion(); statusText.textContent = "Settings saved.";
   }
 
@@ -1509,12 +1556,7 @@
   settingsDialog.addEventListener("close", () => { settingsButton.setAttribute("aria-expanded", "false"); restoreModalPause(); });
   instructionsDialog.addEventListener("close", restoreModalPause);
   settingsForm.addEventListener("submit", saveForm);
-  touchPad.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-direction]");
-    if (!button) return;
-    event.preventDefault();
-    setDirection(button.dataset.direction);
-  });
+  [minFactorInput, maxFactorInput, distractorCountInput, correctAnswersPerLevelInput, gameSpeedInput, feedbackInput].forEach((input) => input.addEventListener("input", handleSettingInput));
 
   bestScoreEl.textContent = String(game.best);
   nextQuestion();

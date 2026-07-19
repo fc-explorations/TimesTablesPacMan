@@ -16,6 +16,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Targets are kept off the same row and column, with minimum spacing, so they do not form an unavoidable line across a corridor.
 - Number targets are glowing circular amber medallions with bright numerals and small drifting sparkles; feedback changes the full target effect to green, red, or black.
 - Number targets activate immediately when Pac-Man runs over them.
+- For three seconds after each new question, the maze, question, and targets are shown without Pac-Man or ghosts so the player can orient themselves.
 - A correct completed equation turns green, increases score and combo, and causes a new question and target layout.
 - When a correct answer advances the level, only walls removed from the old maze fade to black during feedback; walls present in both layouts stay solid. New walls and all power-up pickups in the regenerated level maze fade from black to their colors over the same duration.
 - A wrong completed equation turns red, then the corrected equation appears in white, reduces score and resets combo, and then causes a new question and target layout.

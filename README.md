@@ -12,6 +12,8 @@ The game is a lightweight static site built with vanilla HTML, CSS, and JavaScri
 4. Correct answers increase your score and combo. Wrong answers reveal the correct equation and reset the combo.
 5. Run over a rotating blue orb to frighten the ghosts temporarily.
 
+Each new question gives you three seconds to study the maze and answer targets before Pac-Man and the ghosts return.
+
 The session is endless. A new validated maze and a new set of number targets are generated for every question, while Pac-Man continues from his current position whenever the new layout allows it.
 
 ## Levels and power-ups
