@@ -52,8 +52,8 @@ The Settings dialog lets you choose:
 
 - Minimum and maximum multiplication factors
 - Selected times table from 2 to 9, plus an option to include lower tables
-- Orientation study time before Pac-Man starts, from 1 to 10 seconds
-- Power-up appearance delay, from 0 to 6 seconds
+- Orientation study time before Pac-Man starts, from 0 to 10 seconds
+- Power-up appearance delay, from 0 to 6 seconds, defaulting to 1 second
 - Number of distractors, from 1 to 8
 - Correct answers required to advance a level
 - Shared Pac-Man and ghost game speed, from 0.5× to 2×

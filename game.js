@@ -126,7 +126,7 @@
   ];
 
   function defaultSettings() {
-    return { minFactor: 2, maxFactor: 12, tableFactor: 4, tableRange: true, orientationDuration: 5, powerUpStagger: 3, distractorCount: 5, correctAnswersPerLevel: 3, gameSpeed: 1, feedbackDuration: 2, reducedMotion: false };
+    return { minFactor: 2, maxFactor: 12, tableFactor: 4, tableRange: true, orientationDuration: 5, powerUpStagger: 1, distractorCount: 5, correctAnswersPerLevel: 3, gameSpeed: 1, feedbackDuration: 2, reducedMotion: false };
   }
 
   function loadSettings() {
@@ -473,7 +473,7 @@
     questionPanel.classList.remove("with-countdown");
     const studyTime = getOrientationDuration();
     game.orientationUntil = game.elapsed + studyTime;
-    statusText.textContent = `Orient yourself — Pac-Man starts in ${studyTime} seconds.`;
+    statusText.textContent = studyTime ? `Orient yourself — Pac-Man starts in ${studyTime} seconds.` : "Choose a direction to begin.";
     updateUI();
   }
 
@@ -733,10 +733,13 @@
   }
 
   function speedMultiplier() { return clamp(Number(settings.gameSpeed) || 1, .5, 2) * SPEED_TUNING; }
-  function getOrientationDuration() { return clamp(Number(settings.orientationDuration) || 5, 1, 10); }
+  function getOrientationDuration() {
+    const requested = Number(settings.orientationDuration);
+    return clamp(Number.isFinite(requested) ? requested : 5, 0, 10);
+  }
   function getPowerUpStagger() {
     const requested = Number(settings.powerUpStagger);
-    return clamp(Number.isFinite(requested) ? requested : 3, 0, 6);
+    return clamp(Number.isFinite(requested) ? requested : 1, 0, 6);
   }
 
   function addScore(points) {
@@ -1592,9 +1595,10 @@
 
   function populateSettings(source = settings) {
     const tableFactor = clamp(Math.round(Number(source.tableFactor) || 4), 2, 9);
-    const orientationDuration = clamp(Math.round(Number(source.orientationDuration) || 5), 1, 10);
+    const requestedOrientationDuration = Number(source.orientationDuration);
+    const orientationDuration = clamp(Number.isFinite(requestedOrientationDuration) ? Math.round(requestedOrientationDuration) : 5, 0, 10);
     const requestedPowerUpStagger = Number(source.powerUpStagger);
-    const powerUpStagger = clamp(Number.isFinite(requestedPowerUpStagger) ? requestedPowerUpStagger : 3, 0, 6);
+    const powerUpStagger = clamp(Number.isFinite(requestedPowerUpStagger) ? requestedPowerUpStagger : 1, 0, 6);
     const minFactor = clamp(Math.round(Number(source.minFactor) || 2), 2, 12);
     const maxFactor = clamp(Math.round(Number(source.maxFactor) || 12), minFactor, 12);
     tableFactorInput.value = tableFactor;
@@ -1655,13 +1659,14 @@
   function saveForm(event) {
     event.preventDefault();
     const tableFactor = clamp(Math.round(Number(tableFactorInput.value) || 4), 2, 9);
-    const orientationDuration = clamp(Math.round(Number(orientationDurationInput.value) || 5), 1, 10);
+    const requestedOrientationDuration = Number(orientationDurationInput.value);
+    const orientationDuration = clamp(Number.isFinite(requestedOrientationDuration) ? Math.round(requestedOrientationDuration) : 5, 0, 10);
     const powerUpStagger = clamp(Number(powerUpStaggerInput.value), 0, 6);
     const min = clamp(Math.round(Number(minFactorInput.value) || 2), 2, 12);
     const max = clamp(Math.round(Number(maxFactorInput.value) || 12), min, 12);
     const requestedSpeed = Number(gameSpeedInput.value);
     const gameSpeed = Number.isFinite(requestedSpeed) ? requestedSpeed : 1;
-    settings.tableFactor = tableFactor; settings.tableRange = tableRangeInput.checked; settings.orientationDuration = orientationDuration; settings.powerUpStagger = Number.isFinite(powerUpStagger) ? powerUpStagger : 3; settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 5), 1, 8); settings.correctAnswersPerLevel = clamp(Math.round(Number(correctAnswersPerLevelInput.value) || 3), 1, 20); settings.gameSpeed = clamp(gameSpeed, .5, 2); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
+    settings.tableFactor = tableFactor; settings.tableRange = tableRangeInput.checked; settings.orientationDuration = orientationDuration; settings.powerUpStagger = Number.isFinite(powerUpStagger) ? powerUpStagger : 1; settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 5), 1, 8); settings.correctAnswersPerLevel = clamp(Math.round(Number(correctAnswersPerLevelInput.value) || 3), 1, 20); settings.gameSpeed = clamp(gameSpeed, .5, 2); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
     saveSettings(); openSettings(false); nextQuestion(); statusText.textContent = "Settings saved.";
   }
 
