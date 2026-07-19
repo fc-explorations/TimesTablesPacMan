@@ -91,5 +91,5 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Feedback duration: 2 seconds.
 - Correct answers per level: 3.
 - Game speed: 1×.
-- Number targets per question: one correct plus a configurable number of distractors, defaulting to eight.
+- Number targets per question: one correct plus a configurable number of distractors, defaulting to five.
 - Score and combo are session-only; settings persist locally.

@@ -123,7 +123,7 @@
   ];
 
   function defaultSettings() {
-    return { minFactor: 2, maxFactor: 12, tableFactor: 4, tableRange: true, orientationDuration: 5, distractorCount: 8, correctAnswersPerLevel: 3, gameSpeed: 1, feedbackDuration: 2, reducedMotion: false };
+    return { minFactor: 2, maxFactor: 12, tableFactor: 4, tableRange: true, orientationDuration: 5, distractorCount: 5, correctAnswersPerLevel: 3, gameSpeed: 1, feedbackDuration: 2, reducedMotion: false };
   }
 
   function loadSettings() {
@@ -379,7 +379,7 @@
       candidates.push(min * max, min * (max + 1), Math.max(1, (min - 1) * max));
     }
     candidates.sort(() => Math.random() - .5);
-    const targetCount = clamp(Math.round(Number(settings.distractorCount) || 8) + 1, 2, 9);
+    const targetCount = clamp(Math.round(Number(settings.distractorCount) || 5) + 1, 2, 9);
     for (const value of candidates) if (values.size < targetCount) values.add(value);
     const positions = chooseSpreadPositions(values.size);
     return [...values].map((value, index) => ({ ...positions[index], value, correct: value === question.answer, state: "normal" }));
@@ -1564,7 +1564,7 @@
     const max = clamp(Math.round(Number(maxFactorInput.value) || 12), min, 12);
     const requestedSpeed = Number(gameSpeedInput.value);
     const gameSpeed = Number.isFinite(requestedSpeed) ? requestedSpeed : 1;
-    settings.tableFactor = tableFactor; settings.tableRange = tableRangeInput.checked; settings.orientationDuration = orientationDuration; settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 8), 1, 8); settings.correctAnswersPerLevel = clamp(Math.round(Number(correctAnswersPerLevelInput.value) || 3), 1, 20); settings.gameSpeed = clamp(gameSpeed, .5, 2); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
+    settings.tableFactor = tableFactor; settings.tableRange = tableRangeInput.checked; settings.orientationDuration = orientationDuration; settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 5), 1, 8); settings.correctAnswersPerLevel = clamp(Math.round(Number(correctAnswersPerLevelInput.value) || 3), 1, 20); settings.gameSpeed = clamp(gameSpeed, .5, 2); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
     saveSettings(); openSettings(false); nextQuestion(); statusText.textContent = "Settings saved.";
   }
 
