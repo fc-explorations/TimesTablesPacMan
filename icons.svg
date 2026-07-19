@@ -12,6 +12,18 @@
     <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
     <path d="M3 3v5h5" />
   </symbol>
+  <symbol id="rotate-ccw" viewBox="0 0 24 24">
+    <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+    <path d="M3 3v5h5" />
+  </symbol>
+  <symbol id="factory-reset" viewBox="0 0 24 24">
+    <path d="M3 21h18M5 21V8l6 3V8l6 3V5h2v16" />
+    <path d="M8 14h1M13 14h1M8 18h1M13 18h1" />
+  </symbol>
+  <symbol id="save" viewBox="0 0 24 24">
+    <path d="M5 3h12l3 3v15H4V3h1Z" />
+    <path d="M8 3v6h8V3M8 21v-7h8v7" />
+  </symbol>
   <symbol id="trophy" viewBox="0 0 24 24">
     <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z" />
     <path d="M7 6H3v2a4 4 0 0 0 4 4M17 6h4v2a4 4 0 0 1-4 4" />
