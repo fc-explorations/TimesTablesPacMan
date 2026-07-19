@@ -34,6 +34,10 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Level 9 unlocks Second Chance, which marks one wrong target red, keeps the current question active, and preserves the combo for another attempt.
 - Level 10 unlocks Pac-Man Dash, which temporarily increases Pac-Man's movement speed without changing ghost speed.
 - Level 11 unlocks Ghost Bomb, which explodes every ghost visually, then returns them to the central house and releases them one by one on staggered timers.
+- Level 12 unlocks Ghost Mode, allowing Pac-Man to pass through walls while still interacting with ghosts, targets, and power-ups.
+- Level 13 unlocks Magnet, pulling all ghosts toward Pac-Man temporarily.
+- Level 14 unlocks Repulsion, pushing all ghosts away from Pac-Man temporarily.
+- Level 15 unlocks Sorter, moving the correct number into the position closest to the power-up and placing the most different distractor furthest away.
 - All non-portal power-ups, including orbs and the super-strength star, are consumed when activated; paired teleporters remain reusable.
 - Levels advance after a configurable number of correct answers; wrong answers and penalties never reduce the current level.
 - Ghost collisions reset Pac-Man and combo, but endless practice continues.
@@ -56,6 +60,10 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 | Pink heart | Second Chance | Marks one wrong target red, keeps the question active without revealing the answer, and preserves the combo for another attempt. |
 | Gold arrow with speed lines | Pac-Man Dash | Increases Pac-Man's movement speed temporarily. |
 | Red bomb with a lit fuse | Ghost Bomb | Explodes every ghost, then respawns them in the central house and releases them one by one. |
+| Pale ghost Pac-Man | Ghost Mode | Lets Pac-Man pass through walls without removing them; ghosts, numbers, and power-ups still interact normally. |
+| Pink horseshoe magnet | Magnet | Pulls all ghosts toward Pac-Man temporarily. |
+| Orange outward arrows | Repulsion | Pushes all ghosts away from Pac-Man temporarily. |
+| Lavender sorted bars | Sorter | Reorders answer positions by distance: the correct answer is closest and the most different distractor is furthest. |
 
 ## Technical Design
 
@@ -67,6 +75,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Settings also persist the number of correct answers required to advance each level.
 - Game speed is persisted as a shared multiplier for Pac-Man and every ghost state.
 - Players can configure the number of incorrect/confounding numbers shown alongside the correct answer.
+- Power-ups are revealed in a randomized order with a configurable stagger delay.
 
 ## Maze and Ghosts
 

@@ -31,6 +31,10 @@ Correct answers advance the level after the configured correct-answer threshold.
 - **Level 9:** Second Chance marks one wrong target red, keeps the question active without revealing the answer, and preserves the combo for another attempt.
 - **Level 10:** Pac-Man Dash temporarily increases Pac-Man's movement speed.
 - **Level 11:** Ghost Bomb explodes every ghost, then sends them back to the central house and releases them one by one.
+- **Level 12:** Ghost Mode lets Pac-Man pass through walls while keeping normal ghost, number, and power-up interactions.
+- **Level 13:** Magnet pulls all ghosts toward Pac-Man temporarily.
+- **Level 14:** Repulsion pushes all ghosts away from Pac-Man temporarily.
+- **Level 15:** Sorter reorders number positions so the answer is closest to the power-up and the most different distractor is furthest away.
 
 All non-portal power-ups disappear after they are consumed, including the blue orbs and super-strength star. Teleporters are the exception and can be used repeatedly.
 
@@ -45,6 +49,8 @@ All non-portal power-ups disappear after they are consumed, including the blue o
 | Help and settings | Header buttons |
 
 Opening **How to play** or **Settings** pauses the game automatically.
+
+The Settings dialog also includes a Factory reset action that clears saved settings, session scores, best score, level, and combo.
 
 ## Customise practice
 
