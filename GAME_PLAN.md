@@ -35,7 +35,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Level 10 unlocks Pac-Man Dash, which temporarily increases Pac-Man's movement speed without changing ghost speed.
 - Level 11 unlocks Ghost Bomb, which explodes every ghost visually, then returns them to the central house and releases them one by one on staggered timers.
 - Level 12 unlocks Ghost Mode, allowing Pac-Man to pass through walls while still interacting with ghosts, targets, and power-ups.
-- Level 13 unlocks Magnet, pulling all ghosts toward Pac-Man temporarily.
+- Level 13 unlocks Magnet, pulling all ghosts to the pickup position for the configured effect duration.
 - Level 14 unlocks Repulsion, pushing all ghosts away from Pac-Man temporarily.
 - Level 15 unlocks Sorter, moving the correct number into the position closest to the power-up and placing the most different distractor furthest away.
 - All non-portal power-ups, including orbs and the super-strength star, are consumed when activated; paired teleporters remain reusable.
@@ -61,7 +61,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 | Gold arrow with speed lines | Pac-Man Dash | Increases Pac-Man's movement speed temporarily. |
 | Red bomb with a lit fuse | Ghost Bomb | Explodes every ghost, then respawns them in the central house and releases them one by one. |
 | Pale ghost Pac-Man | Ghost Mode | Lets Pac-Man pass through walls without removing them; ghosts, numbers, and power-ups still interact normally. |
-| Pink horseshoe magnet | Magnet | Pulls all ghosts toward Pac-Man temporarily. |
+| Pink horseshoe magnet with fading rings | Magnet | Pulls all ghosts to the pickup position for the configured effect duration; the pickup emits fast-fading circular waves while active. |
 | Orange outward arrows | Repulsion | Pushes all ghosts away from Pac-Man temporarily. |
 | Lavender sorted bars | Sorter | Reorders answer positions by distance: the correct answer is closest and the most different distractor is furthest. |
 
@@ -71,7 +71,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - `styles.css` provides the responsive layout, classic-inspired presentation, focus states, reduced-motion behavior, and feedback styling.
 - `game.js` owns the game loop, maze, entities, questions, targets, scoring, ghost state machine, input, and local persistence.
 - The maze and entities are rendered on one canvas. Question, feedback, settings, and status text remain semantic HTML.
-- Settings persisted in `localStorage`: selected times table, table-range mode, orientation study time, power-up reveal delay, factor minimum, factor maximum, feedback duration, and reduced-motion preference.
+- Settings persisted in `localStorage`: selected times table, table-range mode, orientation study time, power-up reveal delay, shared effect duration, factor minimum, factor maximum, feedback duration, and reduced-motion preference.
 - Settings also persist the number of correct answers required to advance each level.
 - Game speed is persisted as a shared multiplier for Pac-Man and every ghost state.
 - Players can configure the number of incorrect/confounding numbers shown alongside the correct answer.
@@ -98,6 +98,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - Times-table selection: 4 by default, with table-range mode enabled so lower tables are included; disabling it focuses on the selected table only. The selector ranges from 2–9.
 - Orientation study time: 5 seconds by default, configurable from 0–10 seconds, shown as a countdown before Pac-Man starts after each new question.
 - Power-up reveal delay: 1 second by default between staggered power-up appearances.
+- Effect duration: 8 seconds by default for timed power-ups and effects, configurable from 1–20 seconds.
 - Feedback duration: 2 seconds.
 - Correct answers per level: 3.
 - Game speed: 1×.

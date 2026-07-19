@@ -32,7 +32,7 @@ Correct answers advance the level after the configured correct-answer threshold.
 - **Level 10:** Pac-Man Dash temporarily increases Pac-Man's movement speed.
 - **Level 11:** Ghost Bomb explodes every ghost, then sends them back to the central house and releases them one by one.
 - **Level 12:** Ghost Mode lets Pac-Man pass through walls while keeping normal ghost, number, and power-up interactions.
-- **Level 13:** Magnet pulls all ghosts toward Pac-Man temporarily.
+- **Level 13:** Magnet pulls all ghosts to the pickup position for the configured effect duration and emits fast-fading circular waves while active.
 - **Level 14:** Repulsion pushes all ghosts away from Pac-Man temporarily.
 - **Level 15:** Sorter reorders number positions so the answer is closest to the power-up and the most different distractor is furthest away.
 
@@ -64,6 +64,7 @@ The Settings dialog lets you choose:
 - Correct answers required to advance a level
 - Shared Pac-Man and ghost game speed, from 0.5× to 2×
 - Feedback duration
+- Shared timed power-up effect duration, from 1 to 20 seconds
 - Reduced-motion mode
 
 Settings are saved in the browser with `localStorage`. Score, combo, and best score belong to the current browser session.

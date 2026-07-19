@@ -42,6 +42,8 @@
   const orientationDurationValue = document.querySelector("#orientation-duration-value");
   const powerUpStaggerInput = document.querySelector("#power-up-stagger");
   const powerUpStaggerValue = document.querySelector("#power-up-stagger-value");
+  const effectDurationInput = document.querySelector("#effect-duration");
+  const effectDurationValue = document.querySelector("#effect-duration-value");
   const minFactorValue = document.querySelector("#min-factor-value");
   const maxFactorValue = document.querySelector("#max-factor-value");
   const distractorCountValue = document.querySelector("#distractor-count-value");
@@ -100,6 +102,8 @@
     decoy: null,
     timeWarpUntil: 0,
     magnetUntil: 0,
+    magnetStarted: 0,
+    magnetTarget: null,
     repulsionUntil: 0,
     secondChanceActive: false,
     collisionGraceUntil: 0,
@@ -130,7 +134,7 @@
   ];
 
   function defaultSettings() {
-    return { minFactor: 2, maxFactor: 12, tableFactor: 4, tableRange: true, orientationDuration: 5, powerUpStagger: 1, distractorCount: 5, correctAnswersPerLevel: 3, gameSpeed: 1, feedbackDuration: 2, reducedMotion: false };
+    return { minFactor: 2, maxFactor: 12, tableFactor: 4, tableRange: true, orientationDuration: 5, powerUpStagger: 1, effectDuration: 8, distractorCount: 5, correctAnswersPerLevel: 3, gameSpeed: 1, feedbackDuration: 2, reducedMotion: false };
   }
 
   function loadSettings() {
@@ -521,6 +525,8 @@
     game.decoy = null;
     game.timeWarpUntil = 0;
     game.magnetUntil = 0;
+    game.magnetStarted = 0;
+    game.magnetTarget = null;
     game.repulsionUntil = 0;
     game.secondChanceActive = false;
     game.collisionGraceUntil = 0;
@@ -677,34 +683,38 @@
 
   function activateSuperStrength(powerUp) {
     powerUp.active = false;
-    game.superStrengthUntil = game.elapsed + 8;
-    statusText.textContent = "Super strength! Walls can be broken for 8 seconds.";
+    const duration = getEffectDuration();
+    game.superStrengthUntil = game.elapsed + duration;
+    statusText.textContent = `Super strength! Walls can be broken for ${formatSettingNumber(duration, 1)} seconds.`;
   }
 
   function activatePowerUp(powerUp) {
     powerUp.active = false;
     if (powerUp.type === "radar") {
-      game.radarUntil = game.elapsed + 6;
+      game.radarUntil = game.elapsed + getEffectDuration();
       statusText.textContent = "Radar active — follow the green arrow.";
     } else if (powerUp.type === "shield") {
       game.shieldActive = true;
       statusText.textContent = "Shield active — one ghost collision is protected.";
     } else if (powerUp.type === "ghost-freeze") {
-      game.ghostFreezeUntil = game.elapsed + 5;
-      statusText.textContent = "Ghost Freeze active for 5 seconds.";
+      const duration = getEffectDuration();
+      game.ghostFreezeUntil = game.elapsed + duration;
+      statusText.textContent = `Ghost Freeze active for ${formatSettingNumber(duration, 1)} seconds.`;
     } else if (powerUp.type === "decoy") {
       const directions = ["left", "right", "up", "down"];
-      game.decoy = { x: player.x, y: player.y, dir: directions[randomInt(0, directions.length - 1)], speed: player.speed * .8, until: game.elapsed + 7, mouth: 0, destination: null };
+      game.decoy = { x: player.x, y: player.y, dir: directions[randomInt(0, directions.length - 1)], speed: player.speed * .8, until: game.elapsed + getEffectDuration(), mouth: 0, destination: null };
       statusText.textContent = "Decoy Pac-Man is distracting the ghosts.";
     } else if (powerUp.type === "time-warp") {
-      game.timeWarpUntil = game.elapsed + 6;
-      statusText.textContent = "Time Warp active — ghosts are slowed for 6 seconds.";
+      const duration = getEffectDuration();
+      game.timeWarpUntil = game.elapsed + duration;
+      statusText.textContent = `Time Warp active — ghosts are slowed for ${formatSettingNumber(duration, 1)} seconds.`;
     } else if (powerUp.type === "second-chance") {
       game.secondChanceActive = true;
       statusText.textContent = "Second Chance ready — one wrong answer will preserve your combo.";
     } else if (powerUp.type === "dash") {
-      game.dashUntil = game.elapsed + 8;
-      statusText.textContent = "Pac-Man Dash active for 8 seconds.";
+      const duration = getEffectDuration();
+      game.dashUntil = game.elapsed + duration;
+      statusText.textContent = `Pac-Man Dash active for ${formatSettingNumber(duration, 1)} seconds.`;
     } else if (powerUp.type === "ghost-bomb") {
       game.ghostBombEffect = {
         started: game.elapsed,
@@ -715,14 +725,19 @@
       game.modeElapsed = 0;
       statusText.textContent = "Ghost Bomb! The ghosts exploded and are respawning one by one.";
     } else if (powerUp.type === "ghost-mode") {
-      game.ghostModeUntil = game.elapsed + 8;
-      statusText.textContent = "Ghost mode active — Pac-Man can pass through walls for 8 seconds.";
+      const duration = getEffectDuration();
+      game.ghostModeUntil = game.elapsed + duration;
+      statusText.textContent = `Ghost mode active — Pac-Man can pass through walls for ${formatSettingNumber(duration, 1)} seconds.`;
     } else if (powerUp.type === "magnet") {
-      game.magnetUntil = game.elapsed + 6;
-      statusText.textContent = "Magnet active — ghosts are pulled toward Pac-Man for 6 seconds.";
+      game.magnetStarted = game.elapsed;
+      const duration = getEffectDuration();
+      game.magnetUntil = game.elapsed + duration;
+      game.magnetTarget = { x: powerUp.x + .5, y: powerUp.y + .5 };
+      statusText.textContent = `Magnet active — ghosts are pulled to the pickup for ${formatSettingNumber(duration, 1)} seconds.`;
     } else if (powerUp.type === "repulsion") {
-      game.repulsionUntil = game.elapsed + 6;
-      statusText.textContent = "Repulsion active — ghosts are pushed away for 6 seconds.";
+      const duration = getEffectDuration();
+      game.repulsionUntil = game.elapsed + duration;
+      statusText.textContent = `Repulsion active — ghosts are pushed away for ${formatSettingNumber(duration, 1)} seconds.`;
     } else if (powerUp.type === "sorter") {
       activateSorter(powerUp);
     }
@@ -787,6 +802,10 @@
     const requested = Number(settings.powerUpStagger);
     return clamp(Number.isFinite(requested) ? requested : 1, 0, 6);
   }
+  function getEffectDuration() {
+    const requested = Number(settings.effectDuration);
+    return clamp(Number.isFinite(requested) ? requested : 8, 1, 20);
+  }
 
   function addScore(points) {
     game.score += points;
@@ -847,9 +866,10 @@
 
   function evaluatePowerPellet(pellet) {
     pellet.active = false;
-    game.frightenedUntil = game.elapsed + 7;
+    const duration = getEffectDuration();
+    game.frightenedUntil = game.elapsed + duration;
     addScore(50);
-    statusText.textContent = "Power pellet! Ghosts are frightened for 7 seconds.";
+    statusText.textContent = `Power pellet! Ghosts are frightened for ${formatSettingNumber(duration, 1)} seconds.`;
     updateUI();
   }
 
@@ -912,7 +932,7 @@
   function ghostTarget(ghost, index) {
     if (ghost.state === "eyes") return ghostHome;
     if (ghost.releasing) return GHOST_EXIT_TARGET;
-    if (game.elapsed < game.magnetUntil) return { x: player.x, y: player.y };
+    if (game.elapsed < game.magnetUntil && game.magnetTarget) return { ...game.magnetTarget };
     if (game.elapsed < game.repulsionUntil) {
       const towardPlayerX = wrappedDifference(ghost.x, player.x, COLS);
       const towardPlayerY = wrappedDifference(ghost.y, player.y, ROWS);
@@ -1014,6 +1034,7 @@
     drawTeleporters();
     drawSuperPowerUp();
     drawPowerUps();
+    drawMagnetField();
     drawTargets();
     if (game.orientationUntil > game.elapsed) {
       const revealProgress = settings.reducedMotion || !game.targetReveal
@@ -1254,7 +1275,7 @@
       if (revealAlpha <= 0) return;
       const x = (powerUp.x + .5) * TILE;
       const y = (powerUp.y + .5) * TILE;
-      const rotation = settings.reducedMotion || powerUp.type === "time-warp" || powerUp.type === "shield" ? 0 : game.elapsed * 1.5 + index;
+      const rotation = settings.reducedMotion || powerUp.type === "time-warp" || powerUp.type === "shield" || powerUp.type === "magnet" ? 0 : game.elapsed * 1.5 + index;
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(rotation);
@@ -1343,13 +1364,7 @@
         ctx.shadowBlur = 0;
         ctx.beginPath(); ctx.arc(-2.4, -2, 1.1, 0, Math.PI * 2); ctx.arc(2.4, -2, 1.1, 0, Math.PI * 2); ctx.fill();
       } else if (powerUp.type === "magnet") {
-        ctx.strokeStyle = "#ff78c8";
-        ctx.shadowColor = "#ff78c8";
-        ctx.beginPath(); ctx.arc(0, 0, 6.5, 0, Math.PI); ctx.stroke();
-        ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(-7, 0); ctx.lineTo(-7, 4); ctx.moveTo(7, 0); ctx.lineTo(7, 4); ctx.stroke();
-        ctx.lineWidth = 1.4;
-        ctx.beginPath(); ctx.moveTo(-11, 0); ctx.lineTo(-8, 0); ctx.moveTo(11, 0); ctx.lineTo(8, 0); ctx.stroke();
+        drawMagnetIcon();
       } else if (powerUp.type === "repulsion") {
         ctx.strokeStyle = "#ff9a5c";
         ctx.shadowColor = "#ff9a5c";
@@ -1368,6 +1383,55 @@
       }
       ctx.restore();
     });
+  }
+
+  function drawMagnetIcon() {
+    ctx.strokeStyle = "#ff78c8";
+    ctx.shadowColor = "#ff78c8";
+    ctx.lineCap = "round";
+    ctx.lineWidth = 3.4;
+    ctx.beginPath(); ctx.arc(0, 0, 6.8, Math.PI, Math.PI * 2); ctx.stroke();
+    ctx.lineWidth = 2.8;
+    ctx.beginPath(); ctx.moveTo(-7, 0); ctx.lineTo(-7, 4.5); ctx.moveTo(7, 0); ctx.lineTo(7, 4.5); ctx.stroke();
+    ctx.fillStyle = "#fff3fb";
+    ctx.shadowColor = "#fff3fb";
+    ctx.fillRect(-8.8, 3.3, 3.6, 2.8);
+    ctx.fillRect(5.2, 3.3, 3.6, 2.8);
+    ctx.strokeStyle = "#ffb6df";
+    ctx.shadowColor = "#ff78c8";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(-11, 4.7); ctx.lineTo(-9.2, 4.7); ctx.moveTo(11, 4.7); ctx.lineTo(9.2, 4.7); ctx.stroke();
+  }
+
+  function drawMagnetField() {
+    if (!game.magnetTarget || game.elapsed >= game.magnetUntil) return;
+    const elapsed = game.elapsed - game.magnetStarted;
+    const duration = .8;
+    const waveProgress = (elapsed % duration) / duration;
+    const x = game.magnetTarget.x * TILE;
+    const y = game.magnetTarget.y * TILE;
+    ctx.save();
+    ctx.translate(x, y);
+    if (settings.reducedMotion) {
+      ctx.globalAlpha = .32;
+      ctx.strokeStyle = "#ff78c8";
+      ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.stroke();
+    } else {
+      for (let wave = 0; wave < 3; wave++) {
+        const progress = (waveProgress + wave / 3) % 1;
+        ctx.globalAlpha = (1 - progress) * .34;
+        ctx.strokeStyle = "#ff78c8";
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = "#ff78c8";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(0, 0, 10 + progress * 25, 0, Math.PI * 2); ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = .95;
+    ctx.shadowBlur = 18;
+    drawMagnetIcon();
+    ctx.restore();
   }
 
   function drawPowerSparkles(color, alpha, seed, radius) {
@@ -1672,6 +1736,7 @@
     tableFactorValue.textContent = formatSettingNumber(tableFactorInput.value, 0);
     orientationDurationValue.textContent = `${formatSettingNumber(orientationDurationInput.value, 0)}s`;
     powerUpStaggerValue.textContent = `${formatSettingNumber(powerUpStaggerInput.value, 1)}s`;
+    effectDurationValue.textContent = `${formatSettingNumber(effectDurationInput.value, 1)}s`;
     minFactorValue.textContent = formatSettingNumber(minFactorInput.value, 0);
     maxFactorValue.textContent = formatSettingNumber(maxFactorInput.value, 0);
     distractorCountValue.textContent = formatSettingNumber(distractorCountInput.value, 0);
@@ -1692,11 +1757,14 @@
     const orientationDuration = clamp(Number.isFinite(requestedOrientationDuration) ? Math.round(requestedOrientationDuration) : 5, 0, 10);
     const requestedPowerUpStagger = Number(source.powerUpStagger);
     const powerUpStagger = clamp(Number.isFinite(requestedPowerUpStagger) ? requestedPowerUpStagger : 1, 0, 6);
+    const requestedEffectDuration = Number(source.effectDuration);
+    const effectDuration = clamp(Number.isFinite(requestedEffectDuration) ? requestedEffectDuration : 8, 1, 20);
     const minFactor = clamp(Math.round(Number(source.minFactor) || 2), 2, 12);
     const maxFactor = clamp(Math.round(Number(source.maxFactor) || 12), minFactor, 12);
     tableFactorInput.value = tableFactor;
     orientationDurationInput.value = orientationDuration;
     powerUpStaggerInput.value = powerUpStagger;
+    effectDurationInput.value = effectDuration;
     tableRangeInput.checked = source.tableRange !== false;
     minFactorInput.value = minFactor;
     maxFactorInput.value = maxFactor;
@@ -1765,11 +1833,12 @@
     const requestedOrientationDuration = Number(orientationDurationInput.value);
     const orientationDuration = clamp(Number.isFinite(requestedOrientationDuration) ? Math.round(requestedOrientationDuration) : 5, 0, 10);
     const powerUpStagger = clamp(Number(powerUpStaggerInput.value), 0, 6);
+    const effectDuration = clamp(Number(effectDurationInput.value), 1, 20);
     const min = clamp(Math.round(Number(minFactorInput.value) || 2), 2, 12);
     const max = clamp(Math.round(Number(maxFactorInput.value) || 12), min, 12);
     const requestedSpeed = Number(gameSpeedInput.value);
     const gameSpeed = Number.isFinite(requestedSpeed) ? requestedSpeed : 1;
-    settings.tableFactor = tableFactor; settings.tableRange = tableRangeInput.checked; settings.orientationDuration = orientationDuration; settings.powerUpStagger = Number.isFinite(powerUpStagger) ? powerUpStagger : 1; settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 5), 1, 8); settings.correctAnswersPerLevel = clamp(Math.round(Number(correctAnswersPerLevelInput.value) || 3), 1, 20); settings.gameSpeed = clamp(gameSpeed, .5, 2); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
+    settings.tableFactor = tableFactor; settings.tableRange = tableRangeInput.checked; settings.orientationDuration = orientationDuration; settings.powerUpStagger = Number.isFinite(powerUpStagger) ? powerUpStagger : 1; settings.effectDuration = Number.isFinite(effectDuration) ? effectDuration : 8; settings.minFactor = min; settings.maxFactor = max; settings.distractorCount = clamp(Math.round(Number(distractorCountInput.value) || 5), 1, 8); settings.correctAnswersPerLevel = clamp(Math.round(Number(correctAnswersPerLevelInput.value) || 3), 1, 20); settings.gameSpeed = clamp(gameSpeed, .5, 2); settings.feedbackDuration = clamp(Number(feedbackInput.value) || 2, 1, 8); settings.reducedMotion = reducedMotionInput.checked;
     saveSettings(); openSettings(false); nextQuestion(); statusText.textContent = "Settings saved.";
   }
 
@@ -1814,7 +1883,7 @@
   settingsForm.addEventListener("submit", saveForm);
   resetSettingsButton.addEventListener("click", resetSettings);
   factoryResetButton.addEventListener("click", factoryReset);
-  [tableFactorInput, orientationDurationInput, powerUpStaggerInput, minFactorInput, maxFactorInput, distractorCountInput, correctAnswersPerLevelInput, gameSpeedInput, feedbackInput].forEach((input) => input.addEventListener("input", handleSettingInput));
+  [tableFactorInput, orientationDurationInput, powerUpStaggerInput, effectDurationInput, minFactorInput, maxFactorInput, distractorCountInput, correctAnswersPerLevelInput, gameSpeedInput, feedbackInput].forEach((input) => input.addEventListener("input", handleSettingInput));
 
   bestScoreEl.textContent = String(game.best);
   nextQuestion();
