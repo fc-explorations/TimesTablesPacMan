@@ -25,7 +25,18 @@ button { cursor: pointer; }
 .topbar, .brand, .header-actions, .settings-heading, .settings-actions, .legend-row, .footer { display: flex; align-items: center; }
 .topbar { justify-content: space-between; gap: 24px; margin-bottom: 26px; }
 .brand { gap: 15px; }
-.brand-mark { display: block; width: 54px; height: 54px; flex: 0 0 54px; border-radius: 50%; background: conic-gradient(from 60deg, transparent 0 60deg, var(--yellow) 60deg 360deg); filter: drop-shadow(0 0 14px rgba(255, 216, 77, .62)); }
+.brand-mark { position: relative; display: block; width: 106px; height: 54px; flex: 0 0 106px; }
+.brand-pacman { position: absolute; top: 5px; left: 0; width: 45px; height: 45px; border-radius: 50%; background: conic-gradient(from 60deg, transparent 0 60deg, var(--yellow) 60deg 360deg); filter: drop-shadow(0 0 14px rgba(255, 216, 77, .72)); }
+.brand-dot { position: absolute; top: 26px; width: 3px; height: 3px; border-radius: 50%; background: #fff3ae; box-shadow: 0 0 8px #ffd84d; }
+.brand-dot-one { left: 49px; }
+.brand-dot-two { left: 56px; opacity: .7; }
+.brand-number-target { position: absolute; top: 9px; right: 0; display: grid; place-items: center; width: 36px; height: 36px; border: 2px solid #ffb52e; border-radius: 50%; color: #fff8e4; background: radial-gradient(circle, rgba(255, 214, 84, .35), rgba(255, 133, 31, .13) 48%, rgba(16, 11, 42, .2) 72%); box-shadow: 0 0 0 2px rgba(255, 178, 47, .2), 0 0 10px rgba(255, 166, 38, .86), 0 0 24px rgba(255, 128, 22, .42); text-shadow: 0 0 8px rgba(255, 255, 220, .8); }
+.brand-number-target b { position: relative; z-index: 1; font-size: 1.18rem; line-height: 1; }
+.brand-satellite { position: absolute; display: block; width: 3px; height: 3px; border-radius: 50%; background: #fff3ae; box-shadow: 0 0 7px #ffd84d; }
+.brand-satellite-one { top: -8px; left: 9px; }
+.brand-satellite-two { top: 5px; right: -10px; width: 2px; height: 2px; }
+.brand-satellite-three { bottom: -8px; left: 11px; width: 2px; height: 2px; }
+.brand-satellite-four { bottom: 2px; left: -10px; width: 3px; height: 3px; }
 h1, h2, p { margin: 0; }
 h1 { font-size: clamp(1.45rem, 2.8vw, 2.1rem); letter-spacing: -.045em; text-shadow: 0 0 24px rgba(255,255,255,.12); }
 h2 { font-size: 1.05rem; }
@@ -163,7 +174,18 @@ input[type="range"]::-moz-range-thumb { width: 11px; height: 11px; border: 2px s
   .header-actions { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
   .header-actions .button { min-width: 0; padding: 8px 6px; gap: 5px; font-size: .76rem; }
   .header-actions .button-icon { width: 18px; height: 18px; flex-basis: 18px; }
-  .brand-mark { width: 40px; height: 40px; flex-basis: 40px; }
+  .brand-mark { width: 88px; height: 40px; flex-basis: 88px; }
+  .brand-pacman { top: 3px; width: 34px; height: 34px; }
+  .brand-dot { top: 19px; width: 2px; height: 2px; }
+  .brand-dot-one { left: 37px; }
+  .brand-dot-two { left: 43px; }
+  .brand-number-target { top: 6px; width: 28px; height: 28px; border-width: 1.5px; }
+  .brand-number-target b { font-size: .92rem; }
+  .brand-satellite { width: 2px; height: 2px; }
+  .brand-satellite-one { top: -6px; left: 7px; }
+  .brand-satellite-two { right: -7px; }
+  .brand-satellite-three { bottom: -6px; left: 8px; }
+  .brand-satellite-four { left: -7px; }
   h1 { font-size: 1.35rem; }
   .score-panel { grid-template-columns: 1fr; gap: 10px; }
   .stat { grid-template-columns: 58px minmax(0, 1fr); gap: 15px; min-height: 112px; padding: 14px 16px; }
@@ -191,7 +213,12 @@ input[type="range"]::-moz-range-thumb { width: 11px; height: 11px; border: 2px s
 @media (max-width: 360px) {
   .app-shell { width: calc(100% - 14px); }
   .brand { gap: 10px; }
-  .brand-mark { width: 36px; height: 36px; flex-basis: 36px; }
+  .brand-mark { width: 78px; height: 36px; flex-basis: 78px; }
+  .brand-pacman { width: 30px; height: 30px; }
+  .brand-dot-one { left: 33px; }
+  .brand-dot-two { left: 38px; }
+  .brand-number-target { width: 25px; height: 25px; }
+  .brand-number-target b { font-size: .82rem; }
   h1 { font-size: 1.18rem; }
   .eyebrow { font-size: .64rem; }
   .header-actions .button { padding-inline: 3px; gap: 3px; font-size: .68rem; }
