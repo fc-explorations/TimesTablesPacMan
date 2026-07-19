@@ -1044,6 +1044,7 @@
     } else {
       drawPlayerTrail();
       if (game.teleportEffect && game.elapsed < game.teleportEffect.until) drawTeleportEffect();
+      else if (game.respawnAt > game.elapsed) drawPlayerExplosion();
       else drawPlayer();
       drawDecoy();
       drawRadarArrow();
@@ -1592,6 +1593,123 @@
       ctx.shadowColor = "#73e4ff";
       ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(0, 0, radius + 4, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawPlayerExplosion() {
+    const progress = clamp((game.elapsed - game.hitStarted) / .8, 0, 1);
+    const fade = 1 - progress;
+    const reducedMotion = settings.reducedMotion;
+    const x = player.x * TILE;
+    const y = player.y * TILE;
+    const easeOut = 1 - Math.pow(1 - progress, 2);
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.globalCompositeOperation = "lighter";
+
+    // A hot ignition and two shockwave rings sell the impact before the
+    // fragments spread out.
+    const flash = reducedMotion ? .16 : Math.max(0, 1 - progress * 3.4);
+    if (flash > 0) {
+      ctx.globalAlpha = flash;
+      ctx.fillStyle = "#fff8cf";
+      ctx.shadowBlur = reducedMotion ? 8 : 34;
+      ctx.shadowColor = "#ffd84d";
+      ctx.beginPath(); ctx.arc(0, 0, TILE * (.18 + (1 - progress) * .32), 0, Math.PI * 2); ctx.fill();
+    }
+    for (let ring = 0; ring < 2; ring++) {
+      const ringProgress = clamp(progress * 1.35 - ring * .18, 0, 1);
+      if (!ringProgress) continue;
+      ctx.globalAlpha = (reducedMotion ? .15 : .58) * (1 - ringProgress);
+      ctx.strokeStyle = ring ? "#ff9f43" : "#fff3ae";
+      ctx.shadowBlur = reducedMotion ? 4 : 17;
+      ctx.shadowColor = ctx.strokeStyle;
+      ctx.lineWidth = reducedMotion ? 1 : 2.2 - ringProgress;
+      ctx.beginPath(); ctx.arc(0, 0, TILE * (.28 + ringProgress * (ring ? .88 : .68)), 0, Math.PI * 2); ctx.stroke();
+    }
+
+    const rayCount = reducedMotion ? 8 : 20;
+    for (let ray = 0; ray < rayCount; ray++) {
+      const launchDelay = (ray % 4) * (reducedMotion ? .025 : .035);
+      const projectileProgress = clamp((progress - launchDelay) / (reducedMotion ? .62 : .55), 0, 1);
+      if (projectileProgress >= 1 || progress < launchDelay) continue;
+      const angle = ray * Math.PI * 2 / rayCount + (reducedMotion ? 0 : .1);
+      const headDistance = TILE * (.24 + projectileProgress * (1.05 + (ray % 4) * .16));
+      const tailLength = TILE * (reducedMotion ? .08 : .24 - projectileProgress * .08);
+      const headX = Math.cos(angle) * headDistance;
+      const headY = Math.sin(angle) * headDistance;
+      const tailX = headX - Math.cos(angle) * tailLength;
+      const tailY = headY - Math.sin(angle) * tailLength;
+      const projectileFade = Math.min(1, projectileProgress * 8) * Math.pow(1 - projectileProgress, .75);
+      ctx.globalAlpha = (reducedMotion ? .22 : .82) * projectileFade;
+      ctx.strokeStyle = ray % 5 === 0 ? "#fff8cf" : ray % 2 ? "#ff704d" : "#ffd84d";
+      ctx.shadowBlur = reducedMotion ? 4 : 15;
+      ctx.shadowColor = ctx.strokeStyle;
+      ctx.lineWidth = reducedMotion ? 1 : 1.4 + (ray % 3) * .5;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(tailX, tailY);
+      ctx.lineTo(headX, headY);
+      ctx.stroke();
+      ctx.fillStyle = "#fff8cf";
+      ctx.beginPath(); ctx.arc(headX, headY, reducedMotion ? 1 : 1.5 + (ray % 2) * .4, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Larger colored chunks make it read as Pac-Man breaking apart, while
+    // smaller embers provide the pyrotechnic trail.
+    const shardCount = reducedMotion ? 7 : 16;
+    for (let shard = 0; shard < shardCount; shard++) {
+      const angle = shard * Math.PI * 2 / shardCount - Math.PI / 2;
+      const distance = TILE * (.18 + easeOut * (.54 + (shard % 4) * .13));
+      const size = TILE * (reducedMotion ? .055 : .075 + (shard % 3) * .022) * (1 - progress * .25);
+      ctx.save();
+      ctx.translate(Math.cos(angle) * distance, Math.sin(angle) * distance);
+      ctx.rotate(angle + (shard % 2 ? .65 : -.65));
+      ctx.globalAlpha = (reducedMotion ? .36 : .92) * fade;
+      ctx.fillStyle = shard % 4 === 0 ? "#fff8cf" : shard % 4 === 1 ? "#ffd84d" : shard % 4 === 2 ? "#ff9f43" : "#ff704d";
+      ctx.shadowBlur = reducedMotion ? 4 : 12;
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.beginPath();
+      ctx.moveTo(size * 1.7, 0);
+      ctx.lineTo(-size * .95, size * .75);
+      ctx.lineTo(-size * .55, -size * .85);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    const emberCount = reducedMotion ? 4 : 13;
+    for (let ember = 0; ember < emberCount; ember++) {
+      const angle = ember * Math.PI * 2 / emberCount + .18;
+      const travel = TILE * (.35 + easeOut * (1.05 + (ember % 3) * .18));
+      const emberX = Math.cos(angle) * travel;
+      const emberY = Math.sin(angle) * travel;
+      const trail = TILE * (reducedMotion ? .04 : .18 - progress * .06);
+      ctx.globalAlpha = (reducedMotion ? .3 : .7) * fade;
+      ctx.strokeStyle = ember % 3 === 0 ? "#fff8cf" : "#ff9f43";
+      ctx.shadowBlur = reducedMotion ? 3 : 9;
+      ctx.shadowColor = ctx.strokeStyle;
+      ctx.lineWidth = reducedMotion ? 1 : 1.2;
+      ctx.beginPath();
+      ctx.moveTo(emberX - Math.cos(angle) * trail, emberY - Math.sin(angle) * trail);
+      ctx.lineTo(emberX, emberY);
+      ctx.stroke();
+      ctx.fillStyle = "#fff3ae";
+      ctx.beginPath(); ctx.arc(emberX, emberY, reducedMotion ? 1 : 1.3 + (ember % 2) * .5, 0, Math.PI * 2); ctx.fill();
+    }
+
+    if (!reducedMotion && progress < .38) {
+      const mouth = Math.abs(Math.sin(player.mouth)) * .25;
+      const radius = TILE * .43 * (1 - progress * .7);
+      ctx.globalAlpha = 1 - progress * 2.6;
+      ctx.fillStyle = "#ffd84d";
+      ctx.shadowBlur = 19;
+      ctx.shadowColor = "#ffd84d";
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, radius, DIRECTIONS[player.dir].angle + mouth, DIRECTIONS[player.dir].angle - mouth + Math.PI * 2);
+      ctx.closePath(); ctx.fill();
     }
     ctx.restore();
   }

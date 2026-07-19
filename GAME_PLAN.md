@@ -41,7 +41,7 @@ Pac-Man moves through a classic-inspired toroidal maze while a multiplication qu
 - All non-portal power-ups, including orbs and the super-strength star, are consumed when activated; paired teleporters remain reusable.
 - Levels advance after a configurable number of correct answers; wrong answers and penalties never reduce the current level.
 - Ghost collisions reset Pac-Man and combo, but endless practice continues.
-- After a normal ghost collision, Pac-Man jiggles briefly before respawning at the start tile.
+- After a normal ghost collision, Pac-Man bursts into a brief pyrotechnic explosion of glowing fragments and sparks before respawning at the start tile; reduced-motion mode uses a restrained version.
 - After capture, ghosts return to the central rectangle and release one by one on staggered timers.
 - The session is endless until the player pauses or restarts.
 
